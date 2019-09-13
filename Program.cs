@@ -8,30 +8,30 @@ namespace yacsmu
     {
         private const long MAIN_TICKRATE = 250; // milliseconds, how often the main loop runs.
 
-        private static void Startup()
-        {
-            Console.WriteLine("Loading Configuration...");
-            Config.ConfigureSettings();
-            Console.WriteLine("Configuration Loaded.");
-
-
-            // Last thing in startup
-            Console.WriteLine("Preparing to start server on port " + Config.configuration["server:port"]);
-            Console.ReadLine();
-        }
+        private static Server server;
 
         private static void MainLoop()
         {
-            var timer = new Stopwatch();
-            timer.Start();
-            Console.WriteLine("Running.");
             bool running = true;
             int counter = 0;
+            var timer = new Stopwatch();
+            timer.Start();
+
             while (running)
             {
                 counter++;
+                
+                if (Console.KeyAvailable)
+                {
+                    if (Console.ReadKey(true).KeyChar == 'q')
+                    {
+                        running = false;
+                    }
+                }
+                
 
                 // Background/connection stuff happens here?
+
 
                 if (timer.ElapsedMilliseconds >= MAIN_TICKRATE)
                 {
@@ -39,19 +39,36 @@ namespace yacsmu
                     // Game Update Stuff Happens Here
 
 
-                    Console.WriteLine("Tick: " + timer.ElapsedMilliseconds + ":" + counter);
+                    if (timer.ElapsedMilliseconds > (MAIN_TICKRATE + 100))
+                    {
+                        Console.WriteLine("LAG: " + timer.ElapsedMilliseconds + "ms : " + counter + " cycles");
+                    }
+                    
                     timer.Restart();
                     counter = 0;
                 }
             }
+            Console.WriteLine("Stopping...");
         }
 
         static void Main(string[] args)
         {
-            Startup();
+            Console.WriteLine("Loading Configuration...");
+            Config.ConfigureSettings();
+
+
+
+            // Last things in startup
+            Console.WriteLine("Ready. Press enter to start:");
+            Console.ReadLine();
+            server = new Server();
+            server.Start();
+            Console.WriteLine("Running. Press 'q' to stop.");
+            server.WillAcceptConnections = true;
 
             MainLoop();
 
+            server.Stop();
             //Shutdown goes here
         }
     }

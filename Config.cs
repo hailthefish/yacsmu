@@ -18,6 +18,9 @@ namespace yacsmu
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddIniFile("config.ini", optional: false, reloadOnChange: false)
                 .Build();
+
+
+            Console.WriteLine("Configuration Loaded.");
         }
 
 
