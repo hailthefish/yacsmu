@@ -4,6 +4,6 @@
     {
         internal const int OUTBUF_SIZE = 2048;
 
-        internal const string NL = "\r\n";
+        internal const string NEWLINE = "\r\n";
     }
 }

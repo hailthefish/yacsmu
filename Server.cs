@@ -4,6 +4,8 @@ using System.Text;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace yacsmu
 {
@@ -12,15 +14,17 @@ namespace yacsmu
         private readonly IPAddress CONN_IP = IPAddress.Parse("127.0.0.1");
         
         internal int Port { get; private set; }
-        internal bool WillAcceptConnections { get; set; }
-        internal Dictionary<Socket, ClientConnection> connectedClients;
+        internal bool IsAccepting { get; private set; }
+
+        internal Dictionary<Socket, Client> connectedClients;
 
         private Socket serverSocket;
         
         internal Server()
         {
-            connectedClients = new Dictionary<Socket, ClientConnection>();
-            WillAcceptConnections = false;
+            connectedClients = new Dictionary<Socket, Client>();
+            IsAccepting = false;
+            serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             try
             {
@@ -30,23 +34,45 @@ namespace yacsmu
             {
                 throw;
             }
-            serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
-
+        
         internal void Start()
         {
-            serverSocket.Bind(new IPEndPoint(CONN_IP, Port));
             Console.WriteLine("Starting server on port " + Port);
+            serverSocket.Bind(new IPEndPoint(CONN_IP, Port));
             serverSocket.Listen(0);
+            IsAccepting = true;
+            var incoming = DoConnection();
         }
-
+        
         internal void Stop()
         {
+            IsAccepting = false;
             Console.WriteLine("Stopping server.");
             serverSocket.Close();
         }
 
-      
+        private Client GetClientBySocket(Socket socket)
+        {
+            if (!connectedClients.TryGetValue(socket, out Client client))
+                client = null;
+
+            return client;
+        }
+
+        private Socket GetSocketByClient(Client client)
+        {
+            Socket socket = connectedClients.FirstOrDefault(x => x.Value.GetID() == client.GetID()).Key;
+
+            return socket;
+        }
+
+        private async Task DoConnection()
+        {
+            await Task.Factory.FromAsync(serverSocket.BeginAccept, serverSocket.EndAccept, serverSocket);
+        }
+
+
 
 
 

@@ -11,9 +11,10 @@ namespace yacsmu
         Unauthenticated = 1,
         Authenticating = 2,
         Authenticated = 3,
+
     }
     
-    internal class ClientConnection
+    internal class Client
     {
         uint clientId;
         IPEndPoint clientAddr;
@@ -21,7 +22,7 @@ namespace yacsmu
 
         internal ClientStatus Status { get; set; }
 
-        public ClientConnection(uint id, IPEndPoint endpoint)
+        public Client(uint id, IPEndPoint endpoint)
         {
             clientId = id;
             clientAddr = endpoint;
