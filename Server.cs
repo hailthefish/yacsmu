@@ -42,7 +42,7 @@ namespace yacsmu
             serverSocket.Bind(new IPEndPoint(CONN_IP, Port));
             serverSocket.Listen(0);
             IsAccepting = true;
-            var incoming = DoConnection();
+            CheckIncoming();
         }
         
         internal void Stop()
@@ -67,14 +67,28 @@ namespace yacsmu
             return socket;
         }
 
-        private async Task DoConnection()
+
+        internal void CheckIncoming()
         {
-            await Task.Factory.FromAsync(serverSocket.BeginAccept, serverSocket.EndAccept, serverSocket);
+            serverSocket.BeginAccept(new AsyncCallback(HandleIncoming), serverSocket);
         }
 
+        private void HandleIncoming(IAsyncResult ar)
+        {
+            try
+            {
+                Socket oldSocket = (Socket)ar.AsyncState;
+                Socket newSocket = oldSocket.EndAccept(ar);
 
-
-
+                Client newClient = new Client((uint)connectedClients.Count + 1, (IPEndPoint)newSocket.RemoteEndPoint);
+                connectedClients.Add(newSocket, newClient);
+                Console.WriteLine(string.Format("CONNECTION: From {0} at {1}", (IPEndPoint)newSocket.RemoteEndPoint, DateTime.Now));
+            }
+            catch
+            {
+               
+            }
+        }
 
 
         //Telnet Negotiation

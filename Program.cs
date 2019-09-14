@@ -48,6 +48,8 @@ namespace yacsmu
 
 
                 // Background/connection stuff happens here?
+                if(server.IsAccepting) server.CheckIncoming();
+
 
 
 
@@ -55,6 +57,9 @@ namespace yacsmu
                 {
 
                     // Game Update Stuff Happens Here
+                    
+                    Console.WriteLine("Tick");
+
 
 
                     if (timer.ElapsedMilliseconds > (MAIN_TICKRATE + 100))
