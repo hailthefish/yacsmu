@@ -60,7 +60,7 @@ namespace yacsmu
             foreach (var client in connectedClients)
             {
                 Socket clientSocket = client.Key;
-                clientSocket.Disconnect(false);
+                clientSocket.Shutdown(SocketShutdown.Both);
                 clientSocket.Close();
             }
             serverSocket.Close();
@@ -101,6 +101,8 @@ namespace yacsmu
             {
                 if (!IsConnected(client.Key))
                 {
+                    client.Key.Shutdown(SocketShutdown.Both);
+                    client.Key.Disconnect(false);
                     TimeSpan durationSpan = DateTime.UtcNow.Subtract(client.Value.GetClientConnectedAt());
                     Console.WriteLine(string.Format("DISCONNECTED: {0} at {1}. Connected for {2}.",
                         (IPEndPoint)client.Key.RemoteEndPoint,
@@ -108,6 +110,7 @@ namespace yacsmu
                         durationSpan.ToString(@"d\d\ hh\:mm\:ss")
                         ));
                     connectedClients.Remove(client.Key);
+                    client.Key.Close();
                 }
             }
         }
