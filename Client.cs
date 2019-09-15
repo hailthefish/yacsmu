@@ -7,6 +7,7 @@ namespace yacsmu
 {
     internal enum ClientStatus
     {
+        Invalid = -1,
         Disconnecting = 0,
         Unauthenticated = 1,
         Authenticating = 2,

@@ -20,7 +20,7 @@ namespace yacsmu
             Console.WriteLine("Loading Configuration...");
             Config.ConfigureSettings();
 
-
+            // DB stuff will go here eventually
 
             // Last things in startup
             Console.WriteLine("Ready. Press enter to start:");
@@ -45,21 +45,28 @@ namespace yacsmu
                         running = false;
                     }
                 }
-
-
-                // Background/connection stuff happens here?
-                if(server.IsAccepting) server.CheckIncoming();
-
-
-
+                
+                // This seems bad for performance lol
 
                 if (timer.ElapsedMilliseconds >= MAIN_TICKRATE)
                 {
 
                     // Game Update Stuff Happens Here
-                    
-                    Console.WriteLine("Tick");
 
+
+                    server.CheckAlive();
+
+                    //Console.WriteLine("Tick");
+                    if (server.connectedClients.Count > 0)
+                    {
+                        Console.WriteLine(server.connectedClients.Count + " connections.");
+                        /*
+                        foreach (var client in server.connectedClients)
+                        {
+                            Console.WriteLine(client.Value.GetID() + ": " + client.Value.GetClientAddr());
+                        }
+                        */
+                    }
 
 
                     if (timer.ElapsedMilliseconds > (MAIN_TICKRATE + 100))
@@ -75,6 +82,8 @@ namespace yacsmu
 
             server.Stop();
             //Shutdown goes here
+
+            Console.WriteLine("Done.");
         }
     }
 }
