@@ -15,10 +15,15 @@ namespace yacsmu
         
         internal int Port { get; private set; }
         internal bool IsAccepting { get; private set; }
+        internal string Uptime{ get => DateTime.UtcNow.Subtract(StartTime).ToString(@"d\d\ hh\:mm\:ss");}
+        internal TimeSpan UptimeSpan { get =>  DateTime.UtcNow.Subtract(StartTime);}
+        internal DateTime StartTime { get; private set; }
+        internal DateTime ShutdownTime { get; private set; }
 
         internal Dictionary<Socket, Client> connectedClients;
 
         private Socket serverSocket;
+
         
         internal Server()
         {
@@ -38,7 +43,8 @@ namespace yacsmu
         
         internal void Start()
         {
-            Console.WriteLine("Starting server on port " + Port);
+            StartTime = DateTime.UtcNow;
+            Console.WriteLine("Starting server on port {0} at {1}", Port, StartTime);
             serverSocket.Bind(new IPEndPoint(CONN_IP, Port));
             serverSocket.Listen(0);
             IsAccepting = true;
@@ -48,7 +54,9 @@ namespace yacsmu
         internal void Stop()
         {
             IsAccepting = false;
-            Console.WriteLine("Stopping server.");
+            ShutdownTime = DateTime.UtcNow;
+            Console.WriteLine("Stopping server at {0}. Uptime: {1}.", ShutdownTime, Uptime);
+            Console.WriteLine();
             foreach (var client in connectedClients)
             {
                 Socket clientSocket = client.Key;
@@ -89,12 +97,17 @@ namespace yacsmu
         internal void CheckAlive()
         {
             var activeClients = connectedClients.Where(kv => kv.Value.Status > 0).ToList();
-            foreach (var item in activeClients)
+            foreach (var client in activeClients)
             {
-                if (!IsConnected(item.Key))
+                if (!IsConnected(client.Key))
                 {
-                    Console.WriteLine(string.Format("DISCONNECTED: {0} at {1}", (IPEndPoint)item.Key.RemoteEndPoint, DateTime.Now));
-                    connectedClients.Remove(item.Key);
+                    TimeSpan durationSpan = DateTime.UtcNow.Subtract(client.Value.GetClientConnectedAt());
+                    Console.WriteLine(string.Format("DISCONNECTED: {0} at {1}. Connected for {2}.",
+                        (IPEndPoint)client.Key.RemoteEndPoint,
+                        DateTime.UtcNow,
+                        durationSpan.ToString(@"d\d\ hh\:mm\:ss")
+                        ));
+                    connectedClients.Remove(client.Key);
                 }
             }
         }

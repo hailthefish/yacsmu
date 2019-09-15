@@ -9,11 +9,7 @@ namespace yacsmu
         private const long MAIN_TICKRATE = 250; // milliseconds, how often the main loop runs.
 
         private static Server server;
-
-        private static void MainLoop()
-        {
-           
-        }
+        private static bool running = true;
 
         static void Main(string[] args)
         {
@@ -29,7 +25,7 @@ namespace yacsmu
             server.Start();
             Console.WriteLine("Running. Press 'q' to stop.");
 
-            bool running = true;
+            
             int counter = 0;
             var timer = new Stopwatch();
             timer.Start();
@@ -69,7 +65,7 @@ namespace yacsmu
                     }
 
 
-                    if (timer.ElapsedMilliseconds > (MAIN_TICKRATE + 100))
+                    if (timer.ElapsedMilliseconds > (MAIN_TICKRATE * 2))
                     {
                         Console.WriteLine("LAG: " + timer.ElapsedMilliseconds + "ms : " + counter + " cycles");
                     }
@@ -79,7 +75,7 @@ namespace yacsmu
                 }
             }
             Console.WriteLine("Stopping...");
-
+            
             server.Stop();
             //Shutdown goes here
 
