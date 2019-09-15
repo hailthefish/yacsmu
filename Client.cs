@@ -17,32 +17,19 @@ namespace yacsmu
     
     internal class Client
     {
-        uint clientId;
-        IPEndPoint clientAddr;
-        DateTime dateTimeConnected;
+        internal uint Id { get; private set; }
+        internal IPEndPoint Endpoint { get; private set; }
+        internal DateTime ConnectedAt { get; private set; }
 
         internal ClientStatus Status { get; set; }
 
         public Client(uint id, IPEndPoint endpoint)
         {
-            clientId = id;
-            clientAddr = endpoint;
-            dateTimeConnected = DateTime.UtcNow;
+            Id = id;
+            Endpoint = endpoint;
+            ConnectedAt = DateTime.UtcNow;
             Status = ClientStatus.Unauthenticated;
         }
 
-        internal uint GetID()
-        {
-            return clientId;
-        }
-        internal IPEndPoint GetClientAddr()
-        {
-            return clientAddr;
-        }
-        internal DateTime GetClientConnectedAt()
-        {
-            return dateTimeConnected;
-        }
-        
     }
 }

@@ -76,14 +76,14 @@ namespace yacsmu
 
         private Socket GetSocketByClient(Client client)
         {
-            Socket socket = connectedClients.FirstOrDefault(x => x.Value.GetID() == client.GetID()).Key;
+            Socket socket = connectedClients.FirstOrDefault(x => x.Value.Id == client.Id).Key;
 
             return socket;
         }
 
         private Client GetClientByID(uint id)
         {
-            Client client = connectedClients.FirstOrDefault(x => x.Value.GetID() == id).Value;
+            Client client = connectedClients.FirstOrDefault(x => x.Value.Id == id).Value;
 
             return client;
         }
@@ -103,7 +103,7 @@ namespace yacsmu
                 {
                     client.Key.Shutdown(SocketShutdown.Both);
                     client.Key.Disconnect(false);
-                    TimeSpan durationSpan = DateTime.UtcNow.Subtract(client.Value.GetClientConnectedAt());
+                    TimeSpan durationSpan = DateTime.UtcNow.Subtract(client.Value.ConnectedAt);
                     Console.WriteLine(string.Format("DISCONNECTED: {0} at {1}. Connected for {2}.",
                         (IPEndPoint)client.Key.RemoteEndPoint,
                         DateTime.UtcNow,
