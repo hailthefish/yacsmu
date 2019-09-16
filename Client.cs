@@ -82,12 +82,21 @@ namespace yacsmu
                 }
                 outputBuilder.CopyTo(0, sendChar, 0, sendChar.Length);
                 outputBuilder.Remove(0,sendChar.Length);
-                byte[] sendData = Encoding.ASCII.GetBytes(sendChar);
+
+                List<byte> convertedChars = new List<byte>();
+                foreach (var item in sendChar)
+                {
+                    byte[] temp = Encoding.UTF8.GetBytes(new char[] { item });
+                    if (temp.Length > 1)convertedChars.Add(temp[1]);
+                    else convertedChars.Add(temp[0]);
+                }
+                byte[] sendData = convertedChars.ToArray();
+
                 try
                 {
                     networkStream.BeginWrite(sendData, 0, sendData.Length, new AsyncCallback(WriteCallback), new TxStateObj(sendData.Length,networkStream));
                 }
-                catch (Exception)
+                catch
                 {
 
                     throw;
@@ -99,7 +108,15 @@ namespace yacsmu
         private void WriteCallback(IAsyncResult ar)
         {
             NetworkStream sendingStream = ((TxStateObj)ar.AsyncState).sendingStream;
-            sendingStream.EndWrite(ar);
+            try
+            {
+                sendingStream.EndWrite(ar);
+            }
+            catch
+            {
+
+                throw;
+            }
             Console.WriteLine("Sent {0} bytes to {1}",((TxStateObj)ar.AsyncState).dataLength,RemoteEnd);
         }
 

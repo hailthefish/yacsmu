@@ -129,6 +129,8 @@ namespace yacsmu
                     Console.WriteLine(string.Format("CONNECTION: From {0} at {1}", remoteEnd, newClient.ConnectedAt));
 
                     //DirectRawSend(newSocket, new byte[] {Def.IAC,Def.DO,Def.TTYPE }, SocketFlags.None);
+
+                    newClient.Send("¢£¤¦§¨©ª«¬­®¯°±²³´µ·¶¸¹º»¼½¾¿×æ÷ø");
                 }
                 catch
                 {
