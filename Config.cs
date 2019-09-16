@@ -12,7 +12,7 @@ namespace yacsmu
     {
         internal static IConfigurationRoot configuration;
 
-        internal static void ConfigureSettings()
+        internal static void LoadConfig()
         {
             configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())

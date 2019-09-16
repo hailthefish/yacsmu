@@ -96,6 +96,8 @@ namespace yacsmu
 
         internal void CheckAlive()
         {
+            // Status > 0 indicates clients that are SUPPOSED to be connected in some way
+            // New list so that we can remove them without changing the thing we're iterating over
             var activeClients = connectedClients.Where(kv => kv.Value.Status > 0).ToList();
             foreach (var client in activeClients)
             {

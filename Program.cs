@@ -14,7 +14,7 @@ namespace yacsmu
         static void Main(string[] args)
         {
             Console.WriteLine("Loading Configuration...");
-            Config.ConfigureSettings();
+            Config.LoadConfig();
 
             // DB stuff will go here eventually
 
@@ -41,8 +41,7 @@ namespace yacsmu
                         running = false;
                     }
                 }
-                
-                // This seems bad for performance lol
+
 
                 if (timer.ElapsedMilliseconds >= MAIN_TICKRATE)
                 {
