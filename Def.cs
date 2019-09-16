@@ -6,6 +6,9 @@
 
         internal const string NEWLINE = "\r\n";
 
+        //ASCII
+        internal const byte BEL = 0x07;
+
         //Telnet Negotiation
         internal const byte IAC = 0xFF;
         internal const byte DO = 0xFD;

@@ -55,6 +55,10 @@ namespace yacsmu
                     if (server.connectedClients.Count > 0)
                     {
                         Console.WriteLine(server.connectedClients.Count + " connections.");
+                        foreach (var client in server.connectedClients)
+                        {
+                            server.DirectSendToClient(client.Value,string.Format("{1}: {0} connections.", DateTime.UtcNow, server.connectedClients.Count));
+                        }
 
                     }
                     else Console.WriteLine();
@@ -75,6 +79,7 @@ namespace yacsmu
             //Shutdown goes here
 
             Console.WriteLine("Done.");
+            Console.ReadLine();
         }
     }
 }

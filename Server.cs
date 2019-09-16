@@ -57,13 +57,22 @@ namespace yacsmu
             ShutdownTime = DateTime.UtcNow;
             Console.WriteLine("Stopping server at {0}. Uptime: {1}.", ShutdownTime, Uptime);
             Console.WriteLine();
-            foreach (var client in connectedClients)
+            try
             {
-                Socket clientSocket = client.Key;
-                clientSocket.Shutdown(SocketShutdown.Both);
-                serverSocket.BeginDisconnect(false, new AsyncCallback(HandleDisconnect), serverSocket);
+                foreach (var client in connectedClients)
+                {
+                    Socket clientSocket = client.Key;
+                    clientSocket.Shutdown(SocketShutdown.Both);
+                    clientSocket.BeginDisconnect(false, new AsyncCallback(HandleDisconnect), serverSocket);
+                }
+                serverSocket.Close();
             }
-            serverSocket.Close();
+            catch
+            {
+
+                throw;
+            }
+
         }
 
         private Client GetClientBySocket(Socket socket)
@@ -91,7 +100,11 @@ namespace yacsmu
 
         internal void CheckIncoming()
         {
-            serverSocket.BeginAccept(new AsyncCallback(HandleIncoming), serverSocket);
+            if (IsAccepting)
+            {
+                serverSocket.BeginAccept(new AsyncCallback(HandleIncoming), serverSocket);
+            }
+            
         }
 
         internal void CheckAlive()
@@ -109,7 +122,15 @@ namespace yacsmu
                     connectedClients.Remove(client.Key);
                     client.Key.Close();
                 }
+                else DirectRawSend(client.Key, new byte[] { 0x7E, 0x0D, 0x0A }, SocketFlags.None);
             }
+        }
+
+        internal int CountAlive()
+        {
+            CheckAlive();
+            RemoveInvalidClients();
+            return connectedClients.Count();
         }
 
         private void RemoveInvalidClients()
@@ -132,21 +153,25 @@ namespace yacsmu
 
         private void HandleIncoming(IAsyncResult ar)
         {
-            try
+            if (IsAccepting)
             {
-                Socket oldSocket = (Socket)ar.AsyncState;
-                Socket newSocket = oldSocket.EndAccept(ar);
-                IPEndPoint remoteEnd = (IPEndPoint)newSocket.RemoteEndPoint;
+                try
+                {
+                    Socket oldSocket = (Socket)ar.AsyncState;
+                    Socket newSocket = oldSocket.EndAccept(ar);
+                    IPEndPoint remoteEnd = (IPEndPoint)newSocket.RemoteEndPoint;
 
-                Client newClient = new Client((uint)connectedClients.Count + 1, remoteEnd);
-                connectedClients.Add(newSocket, newClient);
-                Console.WriteLine(string.Format("CONNECTION: From {0} at {1}", remoteEnd, newClient.ConnectedAt));
+                    Client newClient = new Client((uint)connectedClients.Count + 1, remoteEnd);
+                    connectedClients.Add(newSocket, newClient);
+                    Console.WriteLine(string.Format("CONNECTION: From {0} at {1}", remoteEnd, newClient.ConnectedAt));
+                }
+                catch
+                {
+                    throw;
+                }
+                CheckIncoming();
             }
-            catch
-            {
-               
-            }
-            CheckIncoming();
+
         }
 
         private void HandleDisconnect(IAsyncResult ar)
@@ -155,6 +180,24 @@ namespace yacsmu
         }
 
 
+        internal void DirectSendToClient(Client client, string message)
+        {
+            Socket socket = GetSocketByClient(client);
+
+        }
+
+        private void DirectRawSend(Socket socket, byte[] message, SocketFlags socketFlag)
+        {
+            try
+            {
+                socket.Send(message, socketFlag);
+            }
+            catch 
+            {
+                throw;
+            }
+            
+        }
 
     }
 }
