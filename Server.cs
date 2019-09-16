@@ -130,7 +130,7 @@ namespace yacsmu
 
                     //DirectRawSend(newSocket, new byte[] {Def.IAC,Def.DO,Def.TTYPE }, SocketFlags.None);
 
-                    newClient.Send("¢£¤¦§¨©ª«¬­®¯°±²³´µ·¶¸¹º»¼½¾¿×æ÷ø");
+                    newClient.Send(Color.FG.Gray + Color.BG.DBlue + "¢£¤¦§¨©ª«¬­®¯°±²³´µ·¶¸¹º»¼½¾¿×æ÷ø" + Color.Reset);
                 }
                 catch
                 {
