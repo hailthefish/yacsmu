@@ -15,12 +15,12 @@ namespace yacsmu
 
         internal const string Reset = "\u001b[0m"; // Resets everything to default
 
+        internal const string Swap = "\u001b[7m"; // Inverts foreground and background colors
+        internal const string SwapOff = "\u001b[27m"; // Disables inversion
+
         //Style
         internal struct Style
         {
-            internal const string Swap = "\u001b[7m"; // Inverts foreground and background colors
-            internal const string SwapOff = "\u001b[27m"; // Disables inversion
-
             internal const string Strike = "\u001b[9m"; // Strikethrough
             internal const string StrikeOff = "\u001b[29m"; // Disables strikethrough
 
