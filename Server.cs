@@ -61,6 +61,7 @@ namespace yacsmu
             {
                 foreach (var client in connectedClients)
                 {
+                    client.Value.CloseStream(false);
                     Socket clientSocket = client.Key;
                     clientSocket.Shutdown(SocketShutdown.Both);
                     clientSocket.BeginDisconnect(false, new AsyncCallback(HandleDisconnect), serverSocket);
@@ -119,10 +120,11 @@ namespace yacsmu
                     client.Key.Shutdown(SocketShutdown.Both);
                     Console.WriteLine(string.Format("DISCONNECTED: {0} at {1}. Connected for {2}.",
                         (IPEndPoint)client.Key.RemoteEndPoint, DateTime.UtcNow, client.Value.SessionDuration));
+                    client.Value.CloseStream(false);
                     connectedClients.Remove(client.Key);
                     client.Key.Close();
                 }
-                else DirectRawSend(client.Key, new byte[] { 0x7E, 0x0D, 0x0A }, SocketFlags.None);
+                
             }
         }
 
@@ -163,7 +165,10 @@ namespace yacsmu
 
                     Client newClient = new Client((uint)connectedClients.Count + 1, remoteEnd);
                     connectedClients.Add(newSocket, newClient);
+                    newClient.AssignStream(newSocket);
                     Console.WriteLine(string.Format("CONNECTION: From {0} at {1}", remoteEnd, newClient.ConnectedAt));
+
+                    DirectRawSend(newSocket, new byte[] {Def.IAC,Def.DO,Def.TTYPE }, SocketFlags.None);
                 }
                 catch
                 {
@@ -179,12 +184,6 @@ namespace yacsmu
             ((Socket)ar.AsyncState).Close();
         }
 
-
-        internal void DirectSendToClient(Client client, string message)
-        {
-            Socket socket = GetSocketByClient(client);
-
-        }
 
         private void DirectRawSend(Socket socket, byte[] message, SocketFlags socketFlag)
         {

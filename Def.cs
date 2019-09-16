@@ -2,7 +2,10 @@
 {
     internal struct Def
     {
-        internal const int OUTBUF_SIZE = 2048;
+        internal const int BUF_SIZE = 2048;
+        internal const int MAX_OUTPUT = 16384;
+        
+        internal const int STREAM_TIMEOUT = 250; // milliseconds
 
         internal const string NEWLINE = "\r\n";
 
@@ -17,8 +20,8 @@
         internal const byte WONT = 0xFC;
         internal const byte NOP = 0xF1;
         //Subnegotiation
-        internal const byte SB = 0xFA;
-        internal const byte SE = 0xF0;
+        internal const byte SB = 0xFA; //Subnegotiation option start
+        internal const byte SE = 0xF0; //Subnegotiatoin option end
         internal const byte IS = 0x00;
         internal const byte SEND = 0x01;
         //Options
@@ -26,7 +29,7 @@
         internal const byte RFC = 0x21; // Remote Flow Control
         internal const byte NAWS = 0x1F; // Negotiate about window size
         internal const byte ECHO = 0x01;
-        internal const byte TYPE = 0x18; // Terminal type
+        internal const byte TTYPE = 0x18; // Terminal type
         //Misc
         internal const byte GA = 0xF9; //Telnet go-ahead
     }

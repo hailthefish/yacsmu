@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Net;
+using System.Net.Sockets;
 
 namespace yacsmu
 {
@@ -22,15 +23,74 @@ namespace yacsmu
         internal DateTime ConnectedAt { get; private set; }
         internal string SessionDuration { get => DateTime.UtcNow.Subtract(ConnectedAt).ToString(@"d\d\ hh\:mm\:ss"); }
         internal TimeSpan SessionSpan { get => DateTime.UtcNow.Subtract(ConnectedAt); }
-
         internal ClientStatus Status { get; set; }
 
-        public Client(uint id, IPEndPoint endpoint)
+        internal StringBuilder outputBuilder;
+
+        private NetworkStream networkStream;
+
+        internal Client(uint id, IPEndPoint endpoint)
         {
             Id = id;
             Endpoint = endpoint;
             ConnectedAt = DateTime.UtcNow;
+            outputBuilder = new StringBuilder(Def.BUF_SIZE/sizeof(char),Def.MAX_OUTPUT);
             Status = ClientStatus.Unauthenticated;
+        }
+
+        internal void AddOutput(string message)
+        {
+            outputBuilder.Append(message);
+        }
+
+        internal void SendOutput()
+        {
+            if ((networkStream != null) && (networkStream.CanWrite) && outputBuilder.Length > 0)
+            {
+                char[] sendChar;
+                if (outputBuilder.Length > (Def.BUF_SIZE))
+                {
+                    sendChar = new char[(Def.BUF_SIZE)];
+                }
+                else
+                {
+                    sendChar = new char[outputBuilder.Length];
+                    
+                }
+                outputBuilder.CopyTo(0, sendChar, 0, sendChar.Length);
+                outputBuilder.Remove(0,sendChar.Length);
+                byte[] sendData = Encoding.ASCII.GetBytes(sendChar);
+                try
+                {
+                    networkStream.BeginWrite(sendData, 0, sendData.Length, SendComplete, sendData);
+                }
+                catch (Exception)
+                {
+
+                    throw;
+                }
+            }
+            
+        }
+
+        private void SendComplete(IAsyncResult ar)
+        {
+            Console.WriteLine("Sent {0} bytes to {1}",((byte[])ar.AsyncState).Length,this.Endpoint);
+        }
+
+        internal void AssignStream(Socket socket)
+        {
+            networkStream = new NetworkStream(socket);
+        }
+        
+
+        internal void CloseStream(bool waitForTimeout)
+        {
+            if (networkStream != null)
+            {
+                if (waitForTimeout) networkStream.Close(Def.STREAM_TIMEOUT);
+                else networkStream.Dispose();
+            }
         }
 
     }
