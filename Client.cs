@@ -20,6 +20,8 @@ namespace yacsmu
         internal uint Id { get; private set; }
         internal IPEndPoint Endpoint { get; private set; }
         internal DateTime ConnectedAt { get; private set; }
+        internal string SessionDuration { get => DateTime.UtcNow.Subtract(ConnectedAt).ToString(@"d\d\ hh\:mm\:ss"); }
+        internal TimeSpan SessionSpan { get => DateTime.UtcNow.Subtract(ConnectedAt); }
 
         internal ClientStatus Status { get; set; }
 

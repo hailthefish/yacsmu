@@ -104,12 +104,8 @@ namespace yacsmu
                 if (!IsConnected(client.Key))
                 {
                     client.Key.Shutdown(SocketShutdown.Both);
-                    TimeSpan durationSpan = DateTime.UtcNow.Subtract(client.Value.ConnectedAt);
                     Console.WriteLine(string.Format("DISCONNECTED: {0} at {1}. Connected for {2}.",
-                        (IPEndPoint)client.Key.RemoteEndPoint,
-                        DateTime.UtcNow,
-                        durationSpan.ToString(@"d\d\ hh\:mm\:ss")
-                        ));
+                        (IPEndPoint)client.Key.RemoteEndPoint, DateTime.UtcNow, client.Value.SessionDuration));
                     connectedClients.Remove(client.Key);
                     client.Key.Close();
                 }
@@ -140,10 +136,11 @@ namespace yacsmu
             {
                 Socket oldSocket = (Socket)ar.AsyncState;
                 Socket newSocket = oldSocket.EndAccept(ar);
+                IPEndPoint remoteEnd = (IPEndPoint)newSocket.RemoteEndPoint;
 
-                Client newClient = new Client((uint)connectedClients.Count + 1, (IPEndPoint)newSocket.RemoteEndPoint);
+                Client newClient = new Client((uint)connectedClients.Count + 1, remoteEnd);
                 connectedClients.Add(newSocket, newClient);
-                Console.WriteLine(string.Format("CONNECTION: From {0} at {1}", (IPEndPoint)newSocket.RemoteEndPoint, DateTime.UtcNow));
+                Console.WriteLine(string.Format("CONNECTION: From {0} at {1}", remoteEnd, newClient.ConnectedAt));
             }
             catch
             {
