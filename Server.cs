@@ -61,7 +61,7 @@ namespace yacsmu
             {
                 Socket clientSocket = client.Key;
                 clientSocket.Shutdown(SocketShutdown.Both);
-                clientSocket.Close();
+                serverSocket.BeginDisconnect(false, new AsyncCallback(HandleDisconnect), serverSocket);
             }
             serverSocket.Close();
         }
@@ -104,7 +104,6 @@ namespace yacsmu
                 if (!IsConnected(client.Key))
                 {
                     client.Key.Shutdown(SocketShutdown.Both);
-                    client.Key.Disconnect(false);
                     TimeSpan durationSpan = DateTime.UtcNow.Subtract(client.Value.ConnectedAt);
                     Console.WriteLine(string.Format("DISCONNECTED: {0} at {1}. Connected for {2}.",
                         (IPEndPoint)client.Key.RemoteEndPoint,
@@ -151,6 +150,11 @@ namespace yacsmu
                
             }
             CheckIncoming();
+        }
+
+        private void HandleDisconnect(IAsyncResult ar)
+        {
+            ((Socket)ar.AsyncState).Close();
         }
 
 

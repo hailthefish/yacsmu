@@ -41,7 +41,7 @@ namespace yacsmu
                         running = false;
                     }
                 }
-
+                
 
                 if (timer.ElapsedMilliseconds >= MAIN_TICKRATE)
                 {
@@ -50,18 +50,14 @@ namespace yacsmu
 
 
                     server.CheckAlive();
-
-                    //Console.WriteLine("Tick");
+                    
+                    Console.Write("Tick. ");
                     if (server.connectedClients.Count > 0)
                     {
                         Console.WriteLine(server.connectedClients.Count + " connections.");
-                        /*
-                        foreach (var client in server.connectedClients)
-                        {
-                            Console.WriteLine(client.Value.GetID() + ": " + client.Value.GetClientAddr());
-                        }
-                        */
+
                     }
+                    else Console.WriteLine();
 
 
                     if (timer.ElapsedMilliseconds > (MAIN_TICKRATE * 2))
