@@ -3,9 +3,24 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace yacsmu
 {
+    internal class TxStateObj
+    {
+        internal int dataLength;
+        internal NetworkStream sendingStream;
+
+        internal TxStateObj(int length, NetworkStream networkStream)
+        {
+            dataLength = length;
+            sendingStream = networkStream;
+        }
+    }
+
+
     internal enum ClientStatus
     {
         Invalid = -1, // Client is due to be purged from the collection
@@ -19,7 +34,7 @@ namespace yacsmu
     internal class Client
     {
         internal uint Id { get; private set; }
-        internal IPEndPoint Endpoint { get; private set; }
+        internal IPEndPoint RemoteEnd { get; private set; }
         internal DateTime ConnectedAt { get; private set; }
         internal string SessionDuration { get => DateTime.UtcNow.Subtract(ConnectedAt).ToString(@"d\d\ hh\:mm\:ss"); }
         internal TimeSpan SessionSpan { get => DateTime.UtcNow.Subtract(ConnectedAt); }
@@ -32,15 +47,23 @@ namespace yacsmu
         internal Client(uint id, IPEndPoint endpoint)
         {
             Id = id;
-            Endpoint = endpoint;
+            RemoteEnd = endpoint;
             ConnectedAt = DateTime.UtcNow;
             outputBuilder = new StringBuilder(Def.BUF_SIZE/sizeof(char),Def.MAX_OUTPUT);
             Status = ClientStatus.Unauthenticated;
         }
 
-        internal void AddOutput(string message)
+        internal void Send(string message)
         {
-            outputBuilder.Append(message);
+            outputBuilder.Append(message+Def.NEWLINE);
+        }
+        internal void Send(string message, bool newline)
+        {
+            if (newline)
+            {
+                outputBuilder.Append(message + Def.NEWLINE);
+            }
+            else outputBuilder.Append(message);
         }
 
         internal void SendOutput()
@@ -62,7 +85,7 @@ namespace yacsmu
                 byte[] sendData = Encoding.ASCII.GetBytes(sendChar);
                 try
                 {
-                    networkStream.BeginWrite(sendData, 0, sendData.Length, SendComplete, sendData);
+                    networkStream.BeginWrite(sendData, 0, sendData.Length, new AsyncCallback(WriteCallback), new TxStateObj(sendData.Length,networkStream));
                 }
                 catch (Exception)
                 {
@@ -73,9 +96,11 @@ namespace yacsmu
             
         }
 
-        private void SendComplete(IAsyncResult ar)
+        private void WriteCallback(IAsyncResult ar)
         {
-            Console.WriteLine("Sent {0} bytes to {1}",((byte[])ar.AsyncState).Length,this.Endpoint);
+            NetworkStream sendingStream = ((TxStateObj)ar.AsyncState).sendingStream;
+            sendingStream.EndWrite(ar);
+            Console.WriteLine("Sent {0} bytes to {1}",((TxStateObj)ar.AsyncState).dataLength,RemoteEnd);
         }
 
         internal void AssignStream(Socket socket)

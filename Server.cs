@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace yacsmu
 {
+
     internal class Server
     {
         private readonly IPAddress CONN_IP = IPAddress.Parse("127.0.0.1");
@@ -19,15 +20,15 @@ namespace yacsmu
         internal TimeSpan UptimeSpan { get =>  DateTime.UtcNow.Subtract(StartTime);}
         internal DateTime StartTime { get; private set; }
         internal DateTime ShutdownTime { get; private set; }
-
-        internal Dictionary<Socket, Client> connectedClients;
+        
+        internal ClientList clients;
 
         private Socket serverSocket;
 
         
         internal Server()
         {
-            connectedClients = new Dictionary<Socket, Client>();
+            clients = new ClientList();
             IsAccepting = false;
             serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
@@ -59,7 +60,7 @@ namespace yacsmu
             Console.WriteLine();
             try
             {
-                foreach (var client in connectedClients)
+                foreach (var client in clients.Collection)
                 {
                     client.Value.CloseStream(false);
                     Socket clientSocket = client.Key;
@@ -76,29 +77,7 @@ namespace yacsmu
 
         }
 
-        private Client GetClientBySocket(Socket socket)
-        {
-            if (!connectedClients.TryGetValue(socket, out Client client))
-                client = null;
-
-            return client;
-        }
-
-        private Socket GetSocketByClient(Client client)
-        {
-            Socket socket = connectedClients.FirstOrDefault(x => x.Value.Id == client.Id).Key;
-
-            return socket;
-        }
-
-        private Client GetClientByID(uint id)
-        {
-            Client client = connectedClients.FirstOrDefault(x => x.Value.Id == id).Value;
-
-            return client;
-        }
-
-
+        
         internal void CheckIncoming()
         {
             if (IsAccepting)
@@ -110,40 +89,22 @@ namespace yacsmu
 
         internal void CheckAlive()
         {
-            // Status > 0 indicates clients that are SUPPOSED to be connected in some way
-            // New list so that we can remove them without changing the thing we're iterating over
-            var activeClients = connectedClients.Where(kv => kv.Value.Status > 0).ToList();
-            foreach (var client in activeClients)
+            if (clients.Count>0)
             {
-                if (!IsConnected(client.Key))
+                foreach (var client in clients.GetActiveClients())
                 {
-                    client.Key.Shutdown(SocketShutdown.Both);
-                    Console.WriteLine(string.Format("DISCONNECTED: {0} at {1}. Connected for {2}.",
-                        (IPEndPoint)client.Key.RemoteEndPoint, DateTime.UtcNow, client.Value.SessionDuration));
-                    client.Value.CloseStream(false);
-                    connectedClients.Remove(client.Key);
-                    client.Key.Close();
+                    if (!IsConnected(client.Key))
+                    {
+                        client.Value.Status = ClientStatus.Invalid;
+                    }
+
                 }
-                
+                clients.RemoveInvalidClients();
             }
-        }
 
-        internal int CountAlive()
-        {
-            CheckAlive();
-            RemoveInvalidClients();
-            return connectedClients.Count();
-        }
-
-        private void RemoveInvalidClients()
-        {
-            foreach (var item in connectedClients.Where(kv => kv.Value.Status == ClientStatus.Invalid).ToList())
-            {
-                connectedClients.Remove(item.Key);
-            }
+            
         }
         
-
         private bool IsConnected(Socket socket)
         {
             try
@@ -163,12 +124,11 @@ namespace yacsmu
                     Socket newSocket = oldSocket.EndAccept(ar);
                     IPEndPoint remoteEnd = (IPEndPoint)newSocket.RemoteEndPoint;
 
-                    Client newClient = new Client((uint)connectedClients.Count + 1, remoteEnd);
-                    connectedClients.Add(newSocket, newClient);
-                    newClient.AssignStream(newSocket);
+                    Client newClient = new Client((uint)clients.Count + 1, remoteEnd);
+                    clients.AddClient(newSocket, newClient);
                     Console.WriteLine(string.Format("CONNECTION: From {0} at {1}", remoteEnd, newClient.ConnectedAt));
 
-                    DirectRawSend(newSocket, new byte[] {Def.IAC,Def.DO,Def.TTYPE }, SocketFlags.None);
+                    //DirectRawSend(newSocket, new byte[] {Def.IAC,Def.DO,Def.TTYPE }, SocketFlags.None);
                 }
                 catch
                 {
