@@ -62,29 +62,21 @@ namespace yacsmu
 
         internal struct BG //Background colors
         {
-            internal const string Black = "\u001b[0;40m";
-            internal const string DGray = "\u001b[1;40m";
+            internal const string Black = "\u001b[40m";
 
-            internal const string DRed = "\u001b[0;41m";
-            internal const string Red = "\u001b[1;41m";
+            internal const string DRed = "\u001b[41m";
 
-            internal const string DGreen = "\u001b[0;42m";
-            internal const string Green = "\u001b[1;42m";
+            internal const string DGreen = "\u001b[42m";
 
-            internal const string Brown = "\u001b[0;43m";
-            internal const string Yellow = "\u001b[1;43m";
+            internal const string Brown = "\u001b[43m";
 
-            internal const string DBlue = "\u001b[0;44m";
-            internal const string Blue = "\u001b[1;44m";
+            internal const string DBlue = "\u001b[44m";
 
-            internal const string Purple = "\u001b[0;45m";
-            internal const string Pink = "\u001b[1;45m";
+            internal const string Purple = "\u001b[45m";
 
-            internal const string DCyan = "\u001b[0;46m";
-            internal const string Cyan = "\u001b[1;46m";
+            internal const string DCyan = "\u001b[46m";
 
-            internal const string Gray = "\u001b[0;47m";
-            internal const string White = "\u001b[1;47m";
+            internal const string Gray = "\u001b[47m";
 
             internal const string Default = "\u001b[49m";
         }

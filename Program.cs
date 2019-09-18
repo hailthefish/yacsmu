@@ -8,7 +8,7 @@ namespace yacsmu
     {
         private const long MAIN_TICKRATE = 250; // milliseconds, how often the main loop runs.
 
-        private static Server server;
+        internal static Server server;
         private static bool running = true;
 
         static void Main(string[] args)
@@ -18,14 +18,17 @@ namespace yacsmu
 
             // DB stuff will go here eventually
 
-            // Last things in startup
             Console.WriteLine("Ready. Press enter to start:");
             Console.ReadLine();
             server = new Server();
             server.Start();
             Console.WriteLine("Running. Press 'q' to stop.");
 
-            
+            // Load client-list dependent stuff after here
+
+            SimpleChat simpleChat = new SimpleChat();
+
+            // Last part of startup
             int counter = 0;
             var timer = new Stopwatch();
             timer.Start();
@@ -46,19 +49,19 @@ namespace yacsmu
                 if (timer.ElapsedMilliseconds >= MAIN_TICKRATE)
                 {
                     server.CheckAlive();
-
                     server.clients.GetAllInput();
 
                     // Game Update Stuff Happens Here
 
+                    simpleChat.Update();
                     
 
-
+                    //
                     Console.Write("Tick. ");
                     if (server.clients.Count > 0)
                     {
                         Console.WriteLine(server.clients.Count + " connections.");
-                        server.clients.SendToAll(Color.RandomFG() + string.Format("{0}: {1} clients connected.", DateTime.UtcNow, server.clients.Count) + Color.Reset);
+                        //server.clients.SendToAll(Color.RandomFG() + string.Format("{0}: {1} clients connected.", DateTime.UtcNow, server.clients.Count) + Color.Reset);
 
                     }
                     else Console.WriteLine();

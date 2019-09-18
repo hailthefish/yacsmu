@@ -12,7 +12,7 @@ namespace yacsmu
 
     internal class Server
     {
-        private readonly IPAddress CONN_IP = IPAddress.Parse("127.0.0.1");
+        internal static readonly IPAddress CONN_IP = IPAddress.Parse("127.0.0.1");
         
         internal int Port { get; private set; }
         internal bool IsAccepting { get; private set; }
@@ -130,7 +130,7 @@ namespace yacsmu
 
                     //DirectRawSend(newSocket, new byte[] {Def.IAC,Def.DO,Def.TTYPE }, SocketFlags.None);
 
-                    newClient.Send(Color.FG.Gray + Color.BG.DBlue + "¢£¤¦§¨©ª«¬­®¯°±²³´µ·¶¸¹º»¼½¾¿×æ÷ø" + Color.Reset);
+                    //newClient.Send(Color.FG.Gray + Color.BG.DBlue + "¢£¤¦§¨©ª«¬­®¯°±²³´µ·¶¸¹º»¼½¾¿×æ÷ø" + Color.Reset);
                 }
                 catch
                 {

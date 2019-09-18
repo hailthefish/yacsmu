@@ -112,6 +112,35 @@ namespace yacsmu
             }
         }
 
+        internal void SendToAllExcept(string message, Client excepted_client)
+        {
+
+            if (Collection.Count > 0)
+            {
+                foreach (var client in Collection)
+                {
+                    if (client.Value.Status >= 0 && client.Value != excepted_client)
+                    {
+                        client.Value.Send(message);
+                    }
+                }
+            }
+        }
+
+        internal void SendToAllExcept(string message, List<Client> clientList)
+        {
+            if (Collection.Count > 0)
+            {
+                foreach (var client in Collection)
+                {
+                    if (client.Value.Status >= 0 && !clientList.Contains(client.Value))
+                    {
+                        client.Value.Send(message);
+                    }
+                }
+            }
+        }
+
         internal void GetAllInput()
         {
             if (Collection.Count >= 0)
