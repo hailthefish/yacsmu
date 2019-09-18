@@ -14,6 +14,7 @@ namespace yacsmu
     {
         internal static readonly IPAddress CONN_IP = IPAddress.Parse("127.0.0.1");
         
+        internal string Host { get; private set; }
         internal int Port { get; private set; }
         internal bool IsAccepting { get; private set; }
         internal string Uptime{ get => DateTime.UtcNow.Subtract(StartTime).ToString(@"d\d\ hh\:mm\:ss");}
@@ -48,6 +49,7 @@ namespace yacsmu
             Console.WriteLine("Starting server on port {0} at {1}", Port, StartTime);
             serverSocket.Bind(new IPEndPoint(CONN_IP, Port));
             serverSocket.Listen(0);
+            Host = Dns.GetHostName();
             IsAccepting = true;
             CheckIncoming();
         }

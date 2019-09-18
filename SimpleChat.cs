@@ -37,7 +37,7 @@ namespace yacsmu
                 if (!clientColors.ContainsKey(client))
                 {
                     clientColors.Add(client, Color.RandomFG());
-                    client.Send("SimpleChat running on " + Server.CONN_IP + ":" + Program.server.Port);
+                    client.Send("SimpleChat running on " + Program.server.Host + ":" + Program.server.Port);
                 }
 
                 if (client.inputList.Count > 0)
