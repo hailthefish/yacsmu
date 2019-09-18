@@ -46,9 +46,12 @@ namespace yacsmu
                 if (timer.ElapsedMilliseconds >= MAIN_TICKRATE)
                 {
                     server.CheckAlive();
+
+                    server.clients.GetAllInput();
+
                     // Game Update Stuff Happens Here
 
-
+                    
 
 
                     Console.Write("Tick. ");

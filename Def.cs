@@ -3,11 +3,12 @@
     internal struct Def
     {
         internal const int BUF_SIZE = 2048;
-        internal const int MAX_OUTPUT = 16384;
+        internal const int MAX_BUFFER = 16384;
         
         internal const int STREAM_TIMEOUT = 250; // milliseconds
 
         internal const string NEWLINE = "\r\n";
+        internal static readonly char[] NEWLINE_CHAR = NEWLINE.ToCharArray();
 
         //ASCII
         internal const byte BEL = 0x07;

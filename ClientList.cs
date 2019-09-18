@@ -112,6 +112,20 @@ namespace yacsmu
             }
         }
 
+        internal void GetAllInput()
+        {
+            if (Collection.Count >= 0)
+            {
+                foreach (var client in Collection)
+                {
+                    if (client.Value.Status > 0)
+                    {
+                        client.Value.ReadInput();
+                    }
+                }
+            }
+        }
+
         internal void FlushAll()
         {
             if (Collection.Count >= 0)

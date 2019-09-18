@@ -5,18 +5,27 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace yacsmu
 {
     internal class TxStateObj
     {
         internal int dataLength;
-        internal NetworkStream sendingStream;
+        internal NetworkStream networkStream;
+        internal byte[] buffer;
 
         internal TxStateObj(int length, NetworkStream networkStream)
         {
             dataLength = length;
-            sendingStream = networkStream;
+            this.networkStream = networkStream;
+        }
+
+        internal TxStateObj(byte [] buffer, NetworkStream networkStream)
+        {
+            this.buffer = buffer;
+            this.networkStream = networkStream;
+            this.dataLength = buffer.Length;
         }
     }
 
@@ -41,15 +50,19 @@ namespace yacsmu
         internal ClientStatus Status { get; set; }
 
         internal StringBuilder outputBuilder;
+        internal List<string> inputList;
 
         private NetworkStream networkStream;
+        private string inputCollector;
 
         internal Client(uint id, IPEndPoint endpoint)
         {
             Id = id;
             RemoteEnd = endpoint;
             ConnectedAt = DateTime.UtcNow;
-            outputBuilder = new StringBuilder(Def.BUF_SIZE/sizeof(char),Def.MAX_OUTPUT);
+            outputBuilder = new StringBuilder(Def.BUF_SIZE / sizeof(char), Def.MAX_BUFFER);
+            inputCollector = String.Empty;
+            inputList = new List<string>();
             Status = ClientStatus.Unauthenticated;
         }
 
@@ -107,7 +120,7 @@ namespace yacsmu
 
         private void WriteCallback(IAsyncResult ar)
         {
-            NetworkStream sendingStream = ((TxStateObj)ar.AsyncState).sendingStream;
+            NetworkStream sendingStream = ((TxStateObj)ar.AsyncState).networkStream;
             try
             {
                 sendingStream.EndWrite(ar);
@@ -118,6 +131,58 @@ namespace yacsmu
                 throw;
             }
             Console.WriteLine("Sent {0} bytes to {1}",((TxStateObj)ar.AsyncState).dataLength,RemoteEnd);
+        }
+
+        internal void ReadInput()
+        {
+            if ((networkStream != null) && (networkStream.CanRead) && networkStream.DataAvailable)
+            {
+                var readBuffer = new byte[Def.BUF_SIZE];
+                networkStream.BeginRead(readBuffer,0,Def.BUF_SIZE,new AsyncCallback(ReadCallback), new TxStateObj(readBuffer,networkStream));
+            }
+        }
+
+        private void ReadCallback(IAsyncResult ar)
+        {
+            NetworkStream networkStream = ((TxStateObj)ar.AsyncState).networkStream;
+            byte[] buffer = ((TxStateObj)ar.AsyncState).buffer;
+            int bytesReceived;
+            try
+            {
+                bytesReceived = networkStream.EndRead(ar);
+                string inputReceived = Encoding.UTF8.GetString(buffer, 0, bytesReceived);
+                Console.WriteLine("Read {0} bytes from {1}.", bytesReceived, RemoteEnd);
+                inputCollector += inputReceived;
+                ChunkifyInput();
+
+                if (networkStream.CanRead && networkStream.DataAvailable)
+                {
+                    ReadInput();
+                }
+            }
+            catch
+            {
+
+                throw;
+            }
+        }
+
+        private void ChunkifyInput()
+        {
+            string chunk;
+            int index;
+            do
+            {
+                index = inputCollector.IndexOf(Def.NEWLINE);
+                if (index > 0)
+                {
+                    chunk = inputCollector.Substring(0, (inputCollector.IndexOf(Def.NEWLINE) + 1));
+                    inputCollector = inputCollector.Remove(0, chunk.Length);
+                    chunk = chunk.TrimEnd(Def.NEWLINE_CHAR);
+                    chunk = chunk.TrimStart(Def.NEWLINE_CHAR);
+                    inputList.Add(chunk);
+                }
+            } while (index > 0 && !string.IsNullOrEmpty(inputCollector));
         }
 
         internal void AssignStream(Socket socket)
