@@ -89,5 +89,25 @@ namespace yacsmu
             internal const string Default = "\u001b[49m";
         }
 
+        internal static readonly List<string> Foreground = new List<string>()
+        {
+            FG.Black, FG.DGray, FG.DRed, FG.Red, FG.DGreen, FG.Green,
+            FG.Brown, FG.Yellow, FG.DBlue, FG.Blue, FG.Purple, FG.Pink,
+            FG.DCyan, FG.Cyan, FG.Gray, FG.White, FG.Default
+        };
+
+        internal static readonly List<string> Background = new List<string>()
+        {
+            BG.Black, BG.DRed, BG.DGreen,
+            BG.Brown, BG.DBlue, BG.Purple,
+            BG.DCyan, BG.Gray, BG.Default
+        };
+
+        internal static string RandomFG()
+        {
+            // -2, +1 so that we don't get black or 'default' because default is boring.
+            return Foreground[RandomGen.Roll((byte)(Foreground.Count-2))+1];
+        }
+
     }
 }

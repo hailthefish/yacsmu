@@ -58,7 +58,7 @@ namespace yacsmu
                     if (server.clients.Count > 0)
                     {
                         Console.WriteLine(server.clients.Count + " connections.");
-                        server.clients.SendToAll(string.Format("{0}: {1} clients connected.", DateTime.UtcNow, server.clients.Count));
+                        server.clients.SendToAll(Color.RandomFG() + string.Format("{0}: {1} clients connected.", DateTime.UtcNow, server.clients.Count) + Color.Reset);
 
                     }
                     else Console.WriteLine();
