@@ -54,9 +54,9 @@ namespace yacsmu
                     // Game Update Stuff Happens Here
 
                     simpleChat.Update();
-                    
 
-                    //
+
+                    /*
                     Console.Write("Tick. ");
                     if (server.clients.Count > 0)
                     {
@@ -65,6 +65,8 @@ namespace yacsmu
 
                     }
                     else Console.WriteLine();
+                    */
+
 
 
                     if (timer.ElapsedMilliseconds > (MAIN_TICKRATE * 2))
@@ -76,7 +78,9 @@ namespace yacsmu
 
                     timer.Restart();
                     counter = 0;
+
                 }
+                Thread.Sleep(10);
             }
             Console.WriteLine("Stopping...");
 

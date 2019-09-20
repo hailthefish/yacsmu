@@ -20,12 +20,15 @@ namespace yacsmu
 
         internal void Update()
         {
-            // Purge color entries for any disconnected clients.
-            foreach (var item in clientColors.Select(kv => kv).ToList())
+            // Purge color entries for any disconnected clients
+            if (clients.Collection.Count < clientColors.Count)
             {
-                if (!clients.Collection.ContainsValue(item.Key))
+                foreach (var item in clientColors.Select(kv => kv).ToList())
                 {
-                    clientColors.Remove(item.Key);
+                    if (!clients.Collection.ContainsValue(item.Key))
+                    {
+                        clientColors.Remove(item.Key);
+                    }
                 }
             }
 
@@ -37,7 +40,12 @@ namespace yacsmu
                 if (!clientColors.ContainsKey(client))
                 {
                     clientColors.Add(client, Color.RandomFG());
-                    client.Send("SimpleChat running on " + Program.server.Host + ":" + Program.server.Port);
+                    client.Send(string.Format("Simple Chat running on {0}:{1}", Program.server.Host, Program.server.Port));
+                }
+
+                foreach (var item in client.inputList)
+                {
+                    Console.WriteLine(string.Format("{0}: {1}", client.Id,item.Replace(Def.NEWLINE,"\\r\\n")));
                 }
 
                 if (client.inputList.Count > 0)
@@ -46,30 +54,31 @@ namespace yacsmu
                     
                     client.inputList.RemoveAt(0);
 
-                    if (clientInput == "!who")
+                    if (clientInput.ToLower() == "!who")
                     {
                         StringBuilder messageBuilder = new StringBuilder();
                         messageBuilder.Append(Color.FG.Black + Color.BG.Gray +
-                            "                  SimpleChat                  " +
+                            "                                  Simple Chat                                  " +
                             Color.Style.Reset + Def.NEWLINE);
                         foreach (var item in clientColors)
                         {
-                            messageBuilder.Append(item.Value + item.Key.RemoteEnd.Address + Color.Style.Reset + Def.NEWLINE);
+                            messageBuilder.Append(string.Format("                  {0}{1}{2}{3}",item.Value,item.Key.RemoteEnd.Address, Color.Style.Reset, Def.NEWLINE));
                         }
                         messageBuilder.Append(Color.FG.Black + Color.BG.Gray +
-                            "                                              " +
+                            "                                                                               " +
                             Color.Style.Reset + Def.NEWLINE);
                         client.Send(messageBuilder.ToString());
                     }
                     else
                     {
-                        string message = Color.FG.White +
-                            string.Format("{0} : {1} says: ", DateTime.UtcNow, client.RemoteEnd.Address) +
-                            clientColors[client] + Color.ParseTokens(clientInput,true) + Color.Style.Reset;
-                        clients.SendToAllExcept(message + Color.Style.Reset, client);
-                        client.Send(Color.FG.White + Color.BG.DGreen + "Sent!" + Color.Style.Reset + " : " + message + Color.Style.Reset);
-                    }
+                        string timestampPrefix = string.Format("{0} : {1} says: &X", DateTime.UtcNow, client.RemoteEnd.Address);
+                        string selfPrefix = string.Format("^g&WSent!^k  You said: ");
+                        string message = string.Format(clientColors[client] + clientInput + "&X");
 
+                        clients.SendToAllExcept(Color.ParseTokens(timestampPrefix + message,true), client);
+                        client.Send(Color.ParseTokens(selfPrefix + message,true));
+                    }
+                    clientInput = null;
                 }
                 
             }

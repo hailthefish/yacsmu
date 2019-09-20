@@ -112,6 +112,11 @@ namespace yacsmu
             }
         }
 
+        internal void SendTo(List<Client> recipients, string message)
+        {
+            throw new NotImplementedException();
+        }
+
         internal void SendToAllExcept(string message, Client excepted_client)
         {
 

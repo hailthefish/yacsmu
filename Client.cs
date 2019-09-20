@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace yacsmu
 {
@@ -53,7 +54,8 @@ namespace yacsmu
         internal List<string> inputList;
 
         private NetworkStream networkStream;
-        private string inputCollector;
+        //private string inputCollector;
+        private StringBuilder inputBuilder;
 
         internal Client(uint id, IPEndPoint endpoint)
         {
@@ -61,7 +63,8 @@ namespace yacsmu
             RemoteEnd = endpoint;
             ConnectedAt = DateTime.UtcNow;
             outputBuilder = new StringBuilder(Def.BUF_SIZE / sizeof(char), Def.MAX_BUFFER);
-            inputCollector = String.Empty;
+            //inputCollector = string.Empty;
+            inputBuilder = new StringBuilder();
             inputList = new List<string>();
             Status = ClientStatus.Unauthenticated;
         }
@@ -124,7 +127,7 @@ namespace yacsmu
 
                 throw;
             }
-            Console.WriteLine("Sent {0} bytes to {1}",((TxStateObj)ar.AsyncState).dataLength,RemoteEnd);
+            //Console.WriteLine("Sent {0} bytes to {1}",((TxStateObj)ar.AsyncState).dataLength,RemoteEnd);
         }
 
         internal void ReadInput()
@@ -138,15 +141,16 @@ namespace yacsmu
 
         private void ReadCallback(IAsyncResult ar)
         {
-            NetworkStream networkStream = ((TxStateObj)ar.AsyncState).networkStream;
-            byte[] buffer = ((TxStateObj)ar.AsyncState).buffer;
-            int bytesReceived;
             try
             {
-                bytesReceived = networkStream.EndRead(ar);
+                NetworkStream networkStream = ((TxStateObj)ar.AsyncState).networkStream;
+                byte[] buffer = ((TxStateObj)ar.AsyncState).buffer;
+
+                int bytesReceived = networkStream.EndRead(ar);
                 string inputReceived = Encoding.ASCII.GetString(buffer, 0, bytesReceived);
-                Console.WriteLine("Read {0} bytes from {1}.", bytesReceived, RemoteEnd);
-                inputCollector += inputReceived;
+                //Console.WriteLine("Read {0} bytes from {1}.", bytesReceived, RemoteEnd);
+                //inputCollector += inputReceived;
+                inputBuilder.Append(inputReceived);
                 ChunkifyInput();
 
                 if (networkStream.CanRead && networkStream.DataAvailable)
@@ -164,19 +168,22 @@ namespace yacsmu
         private void ChunkifyInput()
         {
             string chunk;
+            string workString = inputBuilder.ToString();
             int index;
             do
             {
-                index = inputCollector.IndexOf(Def.NEWLINE);
+                //index = inputCollector.IndexOf(Def.NEWLINE);
+                index = workString.IndexOf(Def.NEWLINE);
                 if (index > 0)
                 {
-                    chunk = inputCollector.Substring(0, (inputCollector.IndexOf(Def.NEWLINE) + 1));
-                    inputCollector = inputCollector.Remove(0, chunk.Length);
-                    chunk = chunk.TrimEnd(Def.NEWLINE_CHAR);
-                    chunk = chunk.TrimStart(Def.NEWLINE_CHAR);
-                    inputList.Add(chunk);
+                    workString = workString.Substring(0, (workString.IndexOf(Def.NEWLINE) + 1));
+                    //inputCollector = inputCollector.Remove(0, chunk.Length);
+                    inputBuilder.Remove(0, workString.Length);
+                    chunk = Regex.Replace(workString, Regex.Escape(Def.NEWLINE), string.Empty);
+                    if(!string.IsNullOrEmpty(chunk)) inputList.Add(chunk);
                 }
-            } while (index > 0 && !string.IsNullOrEmpty(inputCollector));
+            } while (index > 0 && !(inputBuilder.Length > 0)); 
+            //while (index > 0 && !string.IsNullOrEmpty(inputCollector));
         }
 
         internal void AssignStream(Socket socket)

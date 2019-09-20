@@ -11,28 +11,22 @@ namespace yacsmu
 
         internal static string ParseTokens(string input, bool useANSI)
         {
-            //Console.WriteLine(Tokens.parseRegex);
-            string result;
+
             // useANSI = whether or not a client wants to recieve ANSI color/style codes
             // This will be useful later when we have telnet negotiation and client options
 
-            // Tokens.parseRegex.Replace(firstParse, m =>
-            // { return Tokens.mapANSI.ContainsKey(m.Groups[1].Value) ? Tokens.mapANSI[m.Value] : m.Value; });
-            // Tokens.randomToken.Replace(input, m => RandomFG());
             if (useANSI)
             {
-                string firstParse = Tokens.randomToken.Replace(input, m => RandomFG());
-                result = Tokens.parseRegex.Replace(firstParse, m =>
-                { return Tokens.mapANSI.ContainsKey(Regex.Escape(m.Groups[0].Value)) ? Tokens.mapANSI[Regex.Escape(m.Value)] : m.Value;  });
-                Console.WriteLine(result);
+                string result = Tokens.randomToken.Replace(input, m => RandomFG());
+                return Tokens.parseRegex.Replace(result, m =>
+                { return Tokens.mapANSI.ContainsKey(Regex.Escape(m.Groups[0].Value)) ? Tokens.mapANSI[Regex.Escape(m.Value)] : m.Value; });
             }
             else
             {
                 //Find all the things that look like tokens and get rid of them.
-                string firstParse = Tokens.parseRegex.Replace(input, m => string.Empty);
-                result = Tokens.randomToken.Replace(firstParse, string.Empty);
+                string result = Tokens.randomToken.Replace(input, string.Empty);
+                return Tokens.parseRegex.Replace(result, m => string.Empty);
             }
-            return result;
         }
 
 
@@ -48,52 +42,52 @@ namespace yacsmu
 
             internal static readonly Dictionary<string, string> mapANSI = new Dictionary<string, string>()
             {
-                    // Styles
-                    { Regex.Escape(ST_TOKEN + "X") , Style.Reset },
-                    { Regex.Escape(ST_TOKEN + "V") , Style.Swap },
-                    { Regex.Escape(ST_TOKEN + "v") , Style.SwapOff },
-                    { Regex.Escape(ST_TOKEN + "S") , Style.Strike },
-                    { Regex.Escape(ST_TOKEN + "s") , Style.StrikeOff },
-                    { Regex.Escape(ST_TOKEN + "I") , Style.Italic },
-                    { Regex.Escape(ST_TOKEN + "i") , Style.ItalicOff },
-                    { Regex.Escape(ST_TOKEN + "U") , Style.Under },
-                    { Regex.Escape(ST_TOKEN + "u") , Style.UnderOff },
-                    // Backgrounds
-                    { Regex.Escape(BG_TOKEN + "k") , BG.Black },
-                    { Regex.Escape(BG_TOKEN + "r") , BG.DRed },
-                    { Regex.Escape(BG_TOKEN + "g") , BG.DGreen },
-                    { Regex.Escape(BG_TOKEN + "y") , BG.Brown },
-                    { Regex.Escape(BG_TOKEN + "b") , BG.DBlue },
-                    { Regex.Escape(BG_TOKEN + "p") , BG.Purple },
-                    { Regex.Escape(BG_TOKEN + "c") , BG.DCyan },
-                    { Regex.Escape(BG_TOKEN + "w") , BG.Gray },
-                    { Regex.Escape(BG_TOKEN + "d") , BG.Default },
-                    // Foregrounds
-                    { Regex.Escape(FG_TOKEN + "k") , FG.Black },
-                    { Regex.Escape(FG_TOKEN + "K") , FG.DGray },
-                    { Regex.Escape(FG_TOKEN + "r") , FG.DRed },
-                    { Regex.Escape(FG_TOKEN + "R") , FG.Red},
-                    { Regex.Escape(FG_TOKEN + "g") , FG.DGreen },
-                    { Regex.Escape(FG_TOKEN + "G") , FG.Green },
-                    { Regex.Escape(FG_TOKEN + "y") , FG.Brown },
-                    { Regex.Escape(FG_TOKEN + "Y") , FG.Yellow },
-                    { Regex.Escape(FG_TOKEN + "b") , FG.DBlue },
-                    { Regex.Escape(FG_TOKEN + "B") , FG.Blue },
-                    { Regex.Escape(FG_TOKEN + "p") , FG.Purple },
-                    { Regex.Escape(FG_TOKEN + "P") , FG.Pink },
-                    { Regex.Escape(FG_TOKEN + "c") , FG.DCyan },
-                    { Regex.Escape(FG_TOKEN + "C") , FG.Cyan },
-                    { Regex.Escape(FG_TOKEN + "w") , FG.Gray },
-                    { Regex.Escape(FG_TOKEN + "W") , FG.White },
-                    { Regex.Escape(FG_TOKEN + "D") , FG.Default },
-                    // Misc/Escaping Tokens/etc
-                    //{ Regex.Escape(ST_TOKEN + ST_TOKEN), ST_TOKEN}, commented out because ST and BG are currently the same
-                    { Regex.Escape(BG_TOKEN + BG_TOKEN), BG_TOKEN},
-                    { Regex.Escape(FG_TOKEN + FG_TOKEN), FG_TOKEN},
-                    { Regex.Escape(FG_TOKEN), string.Empty},
-                    // { Regex.Escape(ST_TOKEN), string.Empty}, comented out because ST and BG are currently the same
-                    { Regex.Escape(BG_TOKEN), string.Empty},
-                    {Regex.Escape(RANDOM_TOKEN), RANDOM_TOKEN }, // We replace this separately
+                // Styles
+                { Regex.Escape(ST_TOKEN + "X") , Style.Reset },
+                { Regex.Escape(ST_TOKEN + "V") , Style.Swap },
+                { Regex.Escape(ST_TOKEN + "v") , Style.SwapOff },
+                { Regex.Escape(ST_TOKEN + "S") , Style.Strike },
+                { Regex.Escape(ST_TOKEN + "s") , Style.StrikeOff },
+                { Regex.Escape(ST_TOKEN + "I") , Style.Italic },
+                { Regex.Escape(ST_TOKEN + "i") , Style.ItalicOff },
+                { Regex.Escape(ST_TOKEN + "U") , Style.Under },
+                { Regex.Escape(ST_TOKEN + "u") , Style.UnderOff },
+                // Backgrounds
+                { Regex.Escape(BG_TOKEN + "k") , BG.Black },
+                { Regex.Escape(BG_TOKEN + "r") , BG.DRed },
+                { Regex.Escape(BG_TOKEN + "g") , BG.DGreen },
+                { Regex.Escape(BG_TOKEN + "y") , BG.Brown },
+                { Regex.Escape(BG_TOKEN + "b") , BG.DBlue },
+                { Regex.Escape(BG_TOKEN + "p") , BG.Purple },
+                { Regex.Escape(BG_TOKEN + "c") , BG.DCyan },
+                { Regex.Escape(BG_TOKEN + "w") , BG.Gray },
+                { Regex.Escape(BG_TOKEN + "d") , BG.Default },
+                // Foregrounds
+                { Regex.Escape(FG_TOKEN + "k") , FG.Black },
+                { Regex.Escape(FG_TOKEN + "K") , FG.DGray },
+                { Regex.Escape(FG_TOKEN + "r") , FG.DRed },
+                { Regex.Escape(FG_TOKEN + "R") , FG.Red},
+                { Regex.Escape(FG_TOKEN + "g") , FG.DGreen },
+                { Regex.Escape(FG_TOKEN + "G") , FG.Green },
+                { Regex.Escape(FG_TOKEN + "y") , FG.Brown },
+                { Regex.Escape(FG_TOKEN + "Y") , FG.Yellow },
+                { Regex.Escape(FG_TOKEN + "b") , FG.DBlue },
+                { Regex.Escape(FG_TOKEN + "B") , FG.Blue },
+                { Regex.Escape(FG_TOKEN + "p") , FG.Purple },
+                { Regex.Escape(FG_TOKEN + "P") , FG.Pink },
+                { Regex.Escape(FG_TOKEN + "c") , FG.DCyan },
+                { Regex.Escape(FG_TOKEN + "C") , FG.Cyan },
+                { Regex.Escape(FG_TOKEN + "w") , FG.Gray },
+                { Regex.Escape(FG_TOKEN + "W") , FG.White },
+                { Regex.Escape(FG_TOKEN + "D") , FG.Default },
+                // Misc/Escaping Tokens/etc
+                //{ Regex.Escape(ST_TOKEN + ST_TOKEN), ST_TOKEN}, commented out because ST and BG are currently the same
+                { Regex.Escape(BG_TOKEN + BG_TOKEN), BG_TOKEN},
+                { Regex.Escape(FG_TOKEN + FG_TOKEN), FG_TOKEN},
+                { Regex.Escape(FG_TOKEN), string.Empty},
+                // { Regex.Escape(ST_TOKEN), string.Empty}, comented out because ST and BG are currently the same
+                { Regex.Escape(BG_TOKEN), string.Empty},
+                {Regex.Escape(RANDOM_TOKEN), RANDOM_TOKEN }, // We replace this separately
             };
 
             internal static readonly Regex parseRegex = new Regex(string.Join("|", mapANSI.Keys));
