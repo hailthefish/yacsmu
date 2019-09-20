@@ -96,14 +96,8 @@ namespace yacsmu
                 outputBuilder.CopyTo(0, sendChar, 0, sendChar.Length);
                 outputBuilder.Remove(0,sendChar.Length);
 
-                List<byte> convertedChars = new List<byte>();
-                foreach (var item in sendChar)
-                {
-                    byte[] temp = Encoding.UTF8.GetBytes(new char[] { item });
-                    if (temp.Length > 1)convertedChars.Add(temp[1]);
-                    else convertedChars.Add(temp[0]);
-                }
-                byte[] sendData = convertedChars.ToArray();
+
+                byte[] sendData = Encoding.ASCII.GetBytes(sendChar);
 
                 try
                 {
@@ -150,7 +144,7 @@ namespace yacsmu
             try
             {
                 bytesReceived = networkStream.EndRead(ar);
-                string inputReceived = Encoding.UTF8.GetString(buffer, 0, bytesReceived);
+                string inputReceived = Encoding.ASCII.GetString(buffer, 0, bytesReceived);
                 Console.WriteLine("Read {0} bytes from {1}.", bytesReceived, RemoteEnd);
                 inputCollector += inputReceived;
                 ChunkifyInput();

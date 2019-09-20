@@ -6,6 +6,103 @@ namespace yacsmu
 {
     internal struct Color
     {
+
+        internal string ParseTokens(string input, bool useANSI)
+        {
+            // useANSI = whether or not a client wants to recieve ANSI color/style codes
+            // This will be useful later when we have telnet negotiation and client options
+            if (useANSI)
+            {
+                //Find all the things that look like tokens and replace them with ANSI codes
+            }
+            else
+            {
+                //Find all the things that look like tokens and get rid of them.
+            }
+        }
+
+
+        // Tokens for parsing
+
+        internal struct Tokens
+        {
+            internal const string FG_TOKEN = "&";
+            internal const string BG_TOKEN = "^";
+            internal const string ST_TOKEN = "%";
+
+            internal struct Style
+            {
+                internal const string Reset = "X";
+
+                internal const string Swap = "V";
+                internal const string SwapOff = "V";
+
+                internal const string Strike = "S";
+                internal const string StrikeOff = "s";
+
+                internal const string Italic = "I";
+                internal const string ItalicOff = "i";
+
+                internal const string Under = "U";
+                internal const string UnderOff = "u";
+            }
+
+            internal struct FG
+            {
+                internal const string Black = "k";
+                internal const string DGray = "K";
+
+                internal const string DRed = "r";
+                internal const string Red = "R";
+
+                internal const string DGreen = "g";
+                internal const string Green = "G";
+
+                internal const string Brown = "y";
+                internal const string Yellow = "Y";
+
+                internal const string DBlue = "b";
+                internal const string Blue = "B";
+
+                internal const string Purple = "p";
+                internal const string Pink = "P";
+
+                internal const string DCyan = "c";
+                internal const string Cyan = "C";
+
+                internal const string Gray = "w";
+                internal const string White = "W";
+
+                internal const string Default = "d";
+
+                internal const string Random = "?";
+            }
+            
+            internal struct BG
+            {
+                internal const string Black = "k";
+
+                internal const string DRed = "r";
+
+                internal const string DGreen = "g";
+
+                internal const string Brown = "y";
+
+                internal const string DBlue = "b";
+
+                internal const string Purple = "p";
+
+                internal const string DCyan = "c";
+
+                internal const string Gray = "w";
+
+                internal const string Default = "d";
+            }
+            
+        }
+
+
+
         /*  
          *  \u001b  ANSI escape character
          *  [       goes after the escape character to open a sequence
@@ -100,6 +197,8 @@ namespace yacsmu
             // -2, +1 so that we don't get black or 'default' because default is boring.
             return Foreground[RandomGen.Roll((byte)(Foreground.Count-2))+1];
         }
+
+        // Hell no I'm not making a random background color function.
 
     }
 }
