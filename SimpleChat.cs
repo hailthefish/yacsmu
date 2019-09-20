@@ -51,23 +51,23 @@ namespace yacsmu
                         StringBuilder messageBuilder = new StringBuilder();
                         messageBuilder.Append(Color.FG.Black + Color.BG.Gray +
                             "                  SimpleChat                  " +
-                            Color.Reset + Def.NEWLINE);
+                            Color.Style.Reset + Def.NEWLINE);
                         foreach (var item in clientColors)
                         {
-                            messageBuilder.Append(item.Value + item.Key.RemoteEnd.Address + Color.Reset + Def.NEWLINE);
+                            messageBuilder.Append(item.Value + item.Key.RemoteEnd.Address + Color.Style.Reset + Def.NEWLINE);
                         }
                         messageBuilder.Append(Color.FG.Black + Color.BG.Gray +
                             "                                              " +
-                            Color.Reset + Def.NEWLINE);
+                            Color.Style.Reset + Def.NEWLINE);
                         client.Send(messageBuilder.ToString());
                     }
                     else
                     {
                         string message = Color.FG.White +
-                            string.Format("{0}: {1} says: ", DateTime.UtcNow, client.RemoteEnd.Address) +
-                            clientColors[client] + clientInput + Color.Reset;
-                        clients.SendToAllExcept(message, client);
-                        client.Send(Color.FG.White + Color.BG.DGreen + "Sent!" + Color.Reset);
+                            string.Format("{0} : {1} says: ", DateTime.UtcNow, client.RemoteEnd.Address) +
+                            clientColors[client] + Color.ParseTokens(clientInput,true) + Color.Style.Reset;
+                        clients.SendToAllExcept(message + Color.Style.Reset, client);
+                        client.Send(Color.FG.White + Color.BG.DGreen + "Sent!" + Color.Style.Reset + " : " + message + Color.Style.Reset);
                     }
 
                 }
