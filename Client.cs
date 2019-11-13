@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace yacsmu
 {
@@ -50,10 +51,10 @@ namespace yacsmu
         internal ClientStatus Status { get; set; }
 
         internal StringBuilder outputBuilder;
-        internal List<string> inputList;
+        internal Queue<string> inputQueue;
 
         private NetworkStream networkStream;
-        private string inputCollector;
+        private StringBuilder inputBuilder;
 
         internal Client(uint id, IPEndPoint endpoint)
         {
@@ -61,8 +62,8 @@ namespace yacsmu
             RemoteEnd = endpoint;
             ConnectedAt = DateTime.UtcNow;
             outputBuilder = new StringBuilder(Def.BUF_SIZE / sizeof(char), Def.MAX_BUFFER);
-            inputCollector = String.Empty;
-            inputList = new List<string>();
+            inputBuilder = new StringBuilder();
+            inputQueue = new Queue<string>();
             Status = ClientStatus.Unauthenticated;
         }
 
@@ -96,14 +97,8 @@ namespace yacsmu
                 outputBuilder.CopyTo(0, sendChar, 0, sendChar.Length);
                 outputBuilder.Remove(0,sendChar.Length);
 
-                List<byte> convertedChars = new List<byte>();
-                foreach (var item in sendChar)
-                {
-                    byte[] temp = Encoding.UTF8.GetBytes(new char[] { item });
-                    if (temp.Length > 1)convertedChars.Add(temp[1]);
-                    else convertedChars.Add(temp[0]);
-                }
-                byte[] sendData = convertedChars.ToArray();
+
+                byte[] sendData = Encoding.ASCII.GetBytes(sendChar);
 
                 try
                 {
@@ -130,7 +125,7 @@ namespace yacsmu
 
                 throw;
             }
-            Console.WriteLine("Sent {0} bytes to {1}",((TxStateObj)ar.AsyncState).dataLength,RemoteEnd);
+            //Console.WriteLine("Sent {0} bytes to {1}",((TxStateObj)ar.AsyncState).dataLength,RemoteEnd);
         }
 
         internal void ReadInput()
@@ -144,21 +139,17 @@ namespace yacsmu
 
         private void ReadCallback(IAsyncResult ar)
         {
-            NetworkStream networkStream = ((TxStateObj)ar.AsyncState).networkStream;
-            byte[] buffer = ((TxStateObj)ar.AsyncState).buffer;
-            int bytesReceived;
             try
             {
-                bytesReceived = networkStream.EndRead(ar);
-                string inputReceived = Encoding.UTF8.GetString(buffer, 0, bytesReceived);
-                Console.WriteLine("Read {0} bytes from {1}.", bytesReceived, RemoteEnd);
-                inputCollector += inputReceived;
+                NetworkStream networkStream = ((TxStateObj)ar.AsyncState).networkStream;
+                byte[] buffer = ((TxStateObj)ar.AsyncState).buffer;
+
+                int bytesReceived = networkStream.EndRead(ar);
+                string inputReceived = Encoding.ASCII.GetString(buffer, 0, bytesReceived);
+                //Console.WriteLine("Read {0} bytes from {1}.", bytesReceived, RemoteEnd);
+                inputBuilder.Append(inputReceived);
                 ChunkifyInput();
 
-                if (networkStream.CanRead && networkStream.DataAvailable)
-                {
-                    ReadInput();
-                }
             }
             catch
             {
@@ -169,20 +160,16 @@ namespace yacsmu
 
         private void ChunkifyInput()
         {
-            string chunk;
-            int index;
-            do
+            using (StringReader reader = new StringReader(inputBuilder.ToString()))
             {
-                index = inputCollector.IndexOf(Def.NEWLINE);
-                if (index > 0)
+                inputBuilder.Clear();
+                string line;
+                while ((line = reader.ReadLine())!= null)
                 {
-                    chunk = inputCollector.Substring(0, (inputCollector.IndexOf(Def.NEWLINE) + 1));
-                    inputCollector = inputCollector.Remove(0, chunk.Length);
-                    chunk = chunk.TrimEnd(Def.NEWLINE_CHAR);
-                    chunk = chunk.TrimStart(Def.NEWLINE_CHAR);
-                    inputList.Add(chunk);
+                    inputQueue.Enqueue(line);
                 }
-            } while (index > 0 && !string.IsNullOrEmpty(inputCollector));
+                
+            }
         }
 
         internal void AssignStream(Socket socket)

@@ -12,7 +12,12 @@ namespace yacsmu
 
         internal Dictionary<Socket,Client> Collection { get; private set; }
         internal int Count { get => Collection.Count; }
-        
+        internal List<Client> safeIterableClientList;
+
+        internal List<Client> GetClientList()
+        {
+            return Collection.Values.ToList();
+        }
 
         internal ClientList()
         {
@@ -110,6 +115,11 @@ namespace yacsmu
                     }
                 }
             }
+        }
+
+        internal void SendTo(List<Client> recipients, string message)
+        {
+            throw new NotImplementedException();
         }
 
         internal void SendToAllExcept(string message, Client excepted_client)
