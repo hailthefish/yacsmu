@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace yacsmu
 {
@@ -46,7 +47,7 @@ namespace yacsmu
         internal void Start()
         {
             StartTime = DateTime.UtcNow;
-            Console.WriteLine("Starting server on port {0} at {1}", Port, StartTime);
+            Log.Information("Starting server on port {Port} at {StartTime} UTC.", Port, StartTime);
             serverSocket.Bind(new IPEndPoint(CONN_IP, Port));
             serverSocket.Listen(0);
             Host = Dns.GetHostName();
@@ -58,7 +59,7 @@ namespace yacsmu
         {
             IsAccepting = false;
             ShutdownTime = DateTime.UtcNow;
-            Console.WriteLine("Stopping server at {0}. Uptime: {1}.", ShutdownTime, Uptime);
+            Log.Information("Stopping server at {ShutdownTime} UTC. Uptime: {Uptime}.", ShutdownTime, Uptime);
             Console.WriteLine();
             try
             {
@@ -125,14 +126,12 @@ namespace yacsmu
                     Socket oldSocket = (Socket)ar.AsyncState;
                     Socket newSocket = oldSocket.EndAccept(ar);
                     IPEndPoint remoteEnd = (IPEndPoint)newSocket.RemoteEndPoint;
+                    Log.Verbose("New incoming connection from {remoteEndpoint} at {newClientConnectedAt} UTC.", remoteEnd, DateTime.UtcNow);
 
                     Client newClient = new Client((uint)clients.Count + 1, remoteEnd);
                     clients.AddClient(newSocket, newClient);
-                    Console.WriteLine(string.Format("CONNECTION: From {0} at {1}", remoteEnd, newClient.ConnectedAt));
 
                     //DirectRawSend(newSocket, new byte[] {Def.IAC,Def.DO,Def.TTYPE }, SocketFlags.None);
-
-                    //newClient.Send(Color.FG.Gray + Color.BG.DBlue + "¢£¤¦§¨©ª«¬­®¯°±²³´µ·¶¸¹º»¼½¾¿×æ÷ø" + Color.Reset);
                 }
                 catch
                 {

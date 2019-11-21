@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
+using Serilog;
+using Serilog.Events;
 
 namespace yacsmu
 {
@@ -13,8 +15,11 @@ namespace yacsmu
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Loading Configuration...");
             Config.LoadConfig();
+            Config.SetupLogging();
+
+
+            bool logLevelIsVerbose = Log.IsEnabled(LogEventLevel.Verbose);
 
             // DB stuff will go here eventually
 
@@ -27,6 +32,8 @@ namespace yacsmu
             // Load client-list dependent stuff after here
 
             SimpleChat simpleChat = new SimpleChat();
+
+
 
             // Last part of startup
             int counter = 0;
@@ -42,6 +49,7 @@ namespace yacsmu
                     if (Console.ReadKey(true).KeyChar == 'q')
                     {
                         running = false;
+                        Log.Information("Shutdown started from console.");
                     }
                 }
                 
@@ -55,23 +63,16 @@ namespace yacsmu
 
                     simpleChat.Update();
 
-
-                    /*
-                    Console.Write("Tick. ");
-                    if (server.clients.Count > 0)
+                    
+                    if (logLevelIsVerbose && server.clients.Count > 0)
                     {
-                        Console.WriteLine(server.clients.Count + " connections.");
-                        //server.clients.SendToAll(Color.RandomFG() + string.Format("{0}: {1} clients connected.", DateTime.UtcNow, server.clients.Count) + Color.Reset);
-
+                        Log.Verbose("Tick. {clientsConnected} clients connected.", server.clients.Count);
                     }
-                    else Console.WriteLine();
-                    */
-
 
 
                     if (timer.ElapsedMilliseconds > (MAIN_TICKRATE * 2))
                     {
-                        Console.WriteLine("LAG: " + timer.ElapsedMilliseconds + "ms : " + counter + " cycles");
+                        Log.Warning("LAG: {elapsedMilliseconds} ms : {cycles} cycles!", timer.ElapsedMilliseconds, counter);
                     }
                     
                     server.clients.FlushAll();
@@ -82,12 +83,20 @@ namespace yacsmu
                 }
                 Thread.Sleep(10);
             }
-            Console.WriteLine("Stopping...");
-
-
             
+
             server.Stop();
+
+
             //Shutdown goes here
+
+
+
+
+
+
+            Log.Information("Shutdown complete.");
+            Log.CloseAndFlush();
 
             Console.WriteLine("Done.");
             Console.ReadLine();

@@ -4,6 +4,7 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Linq;
+using Serilog;
 
 namespace yacsmu
 {
@@ -12,7 +13,7 @@ namespace yacsmu
 
         internal Dictionary<Socket,Client> Collection { get; private set; }
         internal int Count { get => Collection.Count; }
-        internal List<Client> safeIterableClientList;
+        //internal List<Client> safeIterableClientList;
 
         internal List<Client> GetClientList()
         {
@@ -28,6 +29,7 @@ namespace yacsmu
         {
             Collection.Add(socket, client);
             client.AssignStream(socket);
+            Log.Information("CONNECTION: From {remoteEndpoint} at {newClientConnectTime} UTC.", client.RemoteEnd, client.ConnectedAt);
         }
 
         internal Client GetClientBySocket(Socket socket)
@@ -70,8 +72,8 @@ namespace yacsmu
         private void Kick(Socket socket, Client client)
         {
             socket.Shutdown(SocketShutdown.Both);
-            Console.WriteLine(string.Format("DISCONNECTED: {0} at {1}. Connected for {2}.",
-                (IPEndPoint)socket.RemoteEndPoint, DateTime.UtcNow, client.SessionDuration));
+            Log.Information("DISCONNECTED: {remoteEndpoint} at {clientDisconnectTime} UTC. Connected for: {clientSessionDuration}.",
+                (IPEndPoint)socket.RemoteEndPoint, DateTime.UtcNow, client.SessionDuration);
             client.CloseStream(false);
             socket.Close();
             Collection.Remove(socket);
