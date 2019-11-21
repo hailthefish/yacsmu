@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Serilog;
 
 namespace yacsmu
 {
     internal class SimpleChat
     {
-        private const string prompt = "> ";
+        private const string prompt = ">> ";
 
         private ClientList clients; // Ref to server's client list
         private Dictionary<Client, string> clientColors;
@@ -17,7 +18,7 @@ namespace yacsmu
         {
             clientColors = new Dictionary<Client, string>();
             clients = Program.server.clients;
-            Console.WriteLine("SimpleChat running.");
+            Log.Information("SimpleChat running.");
         }
 
         internal void Update()

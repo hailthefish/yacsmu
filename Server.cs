@@ -38,8 +38,9 @@ namespace yacsmu
             {
                 Port = int.Parse(Config.configuration["Server:port"]);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Log.Error("Exception thrown during server start: {exception}", e);
                 throw;
             }
         }
@@ -72,9 +73,9 @@ namespace yacsmu
                 }
                 serverSocket.Close();
             }
-            catch
+            catch (Exception e)
             {
-
+                Log.Error("Exception thrown during server stop: {exception}", e);
                 throw;
             }
 
@@ -90,7 +91,7 @@ namespace yacsmu
             
         }
 
-        internal void CheckAlive()
+        internal void CheckConnectionsAlive()
         {
             if (clients.Count>0)
             {
@@ -100,12 +101,9 @@ namespace yacsmu
                     {
                         client.Value.Status = ClientStatus.Invalid;
                     }
-
                 }
                 clients.RemoveInvalidClients();
             }
-
-            
         }
         
         private bool IsConnected(Socket socket)
@@ -114,7 +112,11 @@ namespace yacsmu
             {
                 return !(socket.Poll(1, SelectMode.SelectRead) && socket.Available == 0);
             }
-            catch (SocketException) { return false; }
+            catch (SocketException)
+            {
+                Log.Debug("Connection polling failed for {remoteEndpoint}.");
+                return false;
+            }
         }
 
         private void HandleIncoming(IAsyncResult ar)
