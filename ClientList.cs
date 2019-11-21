@@ -13,7 +13,6 @@ namespace yacsmu
 
         internal Dictionary<Socket,Client> Collection { get; private set; }
         internal int Count { get => Collection.Count; }
-        //internal List<Client> safeIterableClientList;
 
         internal List<Client> GetClientList()
         {
@@ -171,7 +170,7 @@ namespace yacsmu
         {
             if (Collection.Count >= 0)
             {
-                foreach (var client in Collection)
+                foreach (var client in GetActiveClients())
                 {
                     if (client.Value.Status > 0 && client.Value.outputBuilder.Length > 0)
                     {
