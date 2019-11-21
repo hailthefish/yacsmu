@@ -156,7 +156,7 @@ namespace yacsmu
         {
             if (Collection.Count >= 0)
             {
-                foreach (var client in Collection)
+                foreach (var client in GetActiveClients())
                 {
                     if (client.Value.Status > 0)
                     {
