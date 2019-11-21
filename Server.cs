@@ -36,7 +36,7 @@ namespace yacsmu
 
             try
             {
-                Port = int.Parse(Config.configuration["Server:port"]);
+                Port = int.Parse(Config.configuration["Server:Port"]);
             }
             catch (Exception e)
             {
