@@ -56,30 +56,26 @@ namespace yacsmu
 
                 if (timer.ElapsedMilliseconds >= MAIN_TICKRATE)
                 {
-                    server.CheckAlive();
-                    server.clients.GetAllInput();
+                    server.CheckConnectionsAlive(); // Check server connections and flag disconnected ones for client removal, then remove them
 
-                    // Game Update Stuff Happens Here
-
-                    simpleChat.Update();
-
-                    
-                    if (logLevelIsVerbose && server.clients.Count > 0)
-                    {
-                        Log.Verbose("Tick. {clientsConnected} clients connected.", server.clients.Count);
-                    }
-
-
+                    Log.Verbose("Tick. {clientsConnected} clients connected.", server.clients.Count);
                     if (timer.ElapsedMilliseconds > (MAIN_TICKRATE * 2))
                     {
                         Log.Warning("LAG: {elapsedMilliseconds} ms : {cycles} cycles!", timer.ElapsedMilliseconds, counter);
                     }
-                    
-                    server.clients.FlushAll();
 
+                    server.clients.GetAllInput();
+
+                    // Game Update Stuff Happens Here
+
+
+                    simpleChat.Update();
+
+
+                    // End of this game update loop, send waiting data.
+                    server.clients.FlushAll();
                     timer.Restart();
                     counter = 0;
-
                 }
                 Thread.Sleep(10);
             }
