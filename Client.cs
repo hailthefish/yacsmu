@@ -81,7 +81,7 @@ namespace yacsmu
             else outputBuilder.Append(message);
         }
 
-        internal void SendOutput()
+        internal void Flush()
         {
             if ((networkStream != null) && (networkStream.CanWrite) && outputBuilder.Length > 0)
             {

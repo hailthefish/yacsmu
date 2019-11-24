@@ -120,7 +120,10 @@ namespace yacsmu
 
         internal void SendTo(List<Client> recipients, string message)
         {
-            throw new NotImplementedException();
+            foreach (var recipient in recipients)
+            {
+                recipient.Send(message);
+            }
         }
 
         internal void SendToAllExcept(string message, Client excepted_client)
@@ -174,7 +177,7 @@ namespace yacsmu
                 {
                     if (client.Value.Status > 0 && client.Value.outputBuilder.Length > 0)
                     {
-                        client.Value.SendOutput();
+                        client.Value.Flush();
                     }
                 }
             }
