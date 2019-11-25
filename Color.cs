@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Linq;
+using Serilog;
 
 namespace yacsmu
 {
@@ -11,7 +12,6 @@ namespace yacsmu
 
         internal static string ParseTokens(string input, bool useANSI)
         {
-
             // useANSI = whether or not a client wants to recieve ANSI color/style codes
             // This will be useful later when we have telnet negotiation and client options
 
@@ -27,6 +27,7 @@ namespace yacsmu
                 string result = Tokens.randomToken.Replace(input, string.Empty);
                 return Tokens.parseRegex.Replace(result, m => string.Empty);
             }
+
         }
 
 

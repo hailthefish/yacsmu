@@ -108,12 +108,9 @@ namespace yacsmu
         {
             if (Collection.Count > 0)
             {
-                foreach (var client in Collection)
+                foreach (var client in GetClientList())
                 {
-                    if (client.Value.Status >= 0)
-                    {
-                        client.Value.Send(message);
-                    }
+                    client.Send(message);
                 }
             }
         }
@@ -131,11 +128,11 @@ namespace yacsmu
 
             if (Collection.Count > 0)
             {
-                foreach (var client in Collection)
+                foreach (var client in GetClientList())
                 {
-                    if (client.Value.Status >= 0 && client.Value != excepted_client)
+                    if (client != excepted_client)
                     {
-                        client.Value.Send(message);
+                        client.Send(message);
                     }
                 }
             }
@@ -145,11 +142,11 @@ namespace yacsmu
         {
             if (Collection.Count > 0)
             {
-                foreach (var client in Collection)
+                foreach (var client in GetClientList())
                 {
-                    if (client.Value.Status >= 0 && !clientList.Contains(client.Value))
+                    if (!clientList.Contains(client))
                     {
-                        client.Value.Send(message);
+                        client.Send(message);
                     }
                 }
             }
@@ -161,10 +158,7 @@ namespace yacsmu
             {
                 foreach (var client in GetActiveClients())
                 {
-                    if (client.Value.Status > 0)
-                    {
-                        client.Value.ReadInput();
-                    }
+                    client.Value.ReadInput();
                 }
             }
         }
@@ -173,11 +167,11 @@ namespace yacsmu
         {
             if (Collection.Count >= 0)
             {
-                foreach (var client in GetActiveClients())
+                foreach (var client in GetClientList())
                 {
-                    if (client.Value.Status > 0 && client.Value.outputBuilder.Length > 0)
+                    if (client.outputBuilder.Length > 0)
                     {
-                        client.Value.Flush();
+                        client.Flush();
                     }
                 }
             }

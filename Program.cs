@@ -17,8 +17,7 @@ namespace yacsmu
         {
             Config.LoadConfig();
             Config.SetupLogging();
-
-
+            
             bool logLevelIsVerbose = Log.IsEnabled(LogEventLevel.Verbose);
 
             // DB stuff will go here eventually

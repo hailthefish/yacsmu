@@ -50,6 +50,7 @@ namespace yacsmu
         internal string SessionDuration { get => DateTime.UtcNow.Subtract(ConnectedAt).ToString(@"d\d\ hh\:mm\:ss"); }
         internal TimeSpan SessionSpan { get => DateTime.UtcNow.Subtract(ConnectedAt); }
         internal ClientStatus Status { get; set; }
+        internal bool EnabledANSI { get; private set; }
 
         internal StringBuilder outputBuilder;
         internal Queue<string> inputQueue;
@@ -66,14 +67,18 @@ namespace yacsmu
             inputBuilder = new StringBuilder();
             inputQueue = new Queue<string>();
             Status = ClientStatus.Unauthenticated;
+            EnabledANSI = true;
         }
 
         internal void Send(string message)
         {
+
+            message = Color.ParseTokens(message, EnabledANSI);
             outputBuilder.Append(message+Def.NEWLINE);
         }
         internal void Send(string message, bool newline)
         {
+            message = Color.ParseTokens(message, EnabledANSI);
             if (newline)
             {
                 outputBuilder.Append(message + Def.NEWLINE);
