@@ -35,6 +35,7 @@ namespace yacsmu
 
 
             // Last part of startup
+            Commands.Ready();
             int counter = 0;
             var timer = new Stopwatch();
             timer.Start();
@@ -64,6 +65,7 @@ namespace yacsmu
                     }
 
                     server.clients.GetAllInput();
+                    Commands.ParseInputs();
 
                     // Game Update Stuff Happens Here
 
