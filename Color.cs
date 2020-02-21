@@ -10,6 +10,19 @@ namespace yacsmu
     internal struct Color
     {
 
+        internal static string Strip(string input)
+        {                
+            //Find all the things that look like tokens and get rid of them.
+            string result = Tokens.randomToken.Replace(input, string.Empty);
+            return Tokens.parseRegex.Replace(result, m => string.Empty);
+        }
+
+        internal static string Escape(string input)
+        {
+            string result = Tokens.tokens.Replace(input, m => m.Value + m.Value);
+            return result;
+        }
+
         internal static string ParseTokens(string input, bool useANSI)
         {
             // useANSI = whether or not a client wants to recieve ANSI color/style codes
@@ -23,9 +36,7 @@ namespace yacsmu
             }
             else
             {
-                //Find all the things that look like tokens and get rid of them.
-                string result = Tokens.randomToken.Replace(input, string.Empty);
-                return Tokens.parseRegex.Replace(result, m => string.Empty);
+                return Strip(input);
             }
 
         }
@@ -82,17 +93,18 @@ namespace yacsmu
                 { Regex.Escape(FG_TOKEN + "W") , FG.White },
                 { Regex.Escape(FG_TOKEN + "D") , FG.Default },
                 // Misc/Escaping Tokens/etc
-                //{ Regex.Escape(ST_TOKEN + ST_TOKEN), ST_TOKEN}, commented out because ST and BG are currently the same
+                //{ Regex.Escape(ST_TOKEN + ST_TOKEN), ST_TOKEN}, commented out because ST and FG are currently the same
                 { Regex.Escape(BG_TOKEN + BG_TOKEN), BG_TOKEN},
                 { Regex.Escape(FG_TOKEN + FG_TOKEN), FG_TOKEN},
                 { Regex.Escape(FG_TOKEN), string.Empty},
-                // { Regex.Escape(ST_TOKEN), string.Empty}, comented out because ST and BG are currently the same
+                // { Regex.Escape(ST_TOKEN), string.Empty}, comented out because ST and FG are currently the same
                 { Regex.Escape(BG_TOKEN), string.Empty},
                 {Regex.Escape(RANDOM_TOKEN), RANDOM_TOKEN }, // We replace this separately
             };
 
             internal static readonly Regex parseRegex = new Regex(string.Join("|", mapANSI.Keys));
             internal static readonly Regex randomToken = new Regex(Regex.Escape(RANDOM_TOKEN));
+            internal static readonly Regex tokens = new Regex(string.Join("|", new string[] { FG_TOKEN, BG_TOKEN, ST_TOKEN }));
         }
 
 
