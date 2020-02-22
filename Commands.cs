@@ -13,7 +13,7 @@ namespace yacsmu
         internal bool FullMatch;
         
 
-        internal Command(object obj, Commands.ParamsAction del, bool fullMatch)
+        internal Command(object obj, Commands.ParamsAction del, bool fullMatch = false)
         {
             FullMatch = fullMatch;
             CallObject = obj;
@@ -46,11 +46,11 @@ namespace yacsmu
         }
 
         public static void AddCommand
-            (string[] commandStrings, object obj, ParamsAction commandMethod, bool fullMatch = false, bool caseSensitive = false)
+            (string[] commandStrings, object obj, ParamsAction commandMethod, bool fullMatch = false)
         {
             for (int i = 0; i < commandStrings.Length; i++)
             {
-                if (commandDict.TryAdd(commandStrings[i].ToLower(), new Command(obj, commandMethod, fullMatch)))
+                if (commandDict.TryAdd(commandStrings[i].ToLower(), new Command(obj, commandMethod)))
                 {
                     Log.Debug("Added command string \"{0}\" from {1}.", commandStrings[i].ToLower(), obj);
                 }
@@ -99,7 +99,8 @@ namespace yacsmu
                         else
                         {
                             int index = commandList.BinarySearch(command);
-                            index = ~index; // We won't get here if there's an exact match, so we know we have the XOR of the closest match
+                            // We won't get here if there's an exact match, so we know we have the XOR of the index of the closest match
+                            index = ~index;
                             if (index >= 0 && index < commandList.Count && commandList[index].StartsWith(command))
                             {
                                 string match = commandList[index];
