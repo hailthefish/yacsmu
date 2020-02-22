@@ -2,7 +2,7 @@
 {
     internal struct Def
     {
-        internal static string TITLESCREEN = "yacsmu_titlescreen.txt";
+        internal static string TITLESCREEN = ".\\files\\yacsmu_titlescreen.txt";
 
         internal const int BUF_SIZE = 2048;
         internal const int MAX_BUFFER = 16384;
@@ -24,7 +24,7 @@
         internal const byte NOP = 0xF1;
         //Subnegotiation
         internal const byte SB = 0xFA; //Subnegotiation option start
-        internal const byte SE = 0xF0; //Subnegotiatoin option end
+        internal const byte SE = 0xF0; //Subnegotiation option end
         internal const byte IS = 0x00;
         internal const byte SEND = 0x01;
         //Options

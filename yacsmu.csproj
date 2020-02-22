@@ -29,7 +29,7 @@
     <None Update="config.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="yacsmu_titlescreen.txt">
+    <None Update="files\yacsmu_titlescreen.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
