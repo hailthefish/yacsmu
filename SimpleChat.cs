@@ -19,7 +19,7 @@ namespace yacsmu
             Commands.ParamsAction who = Who;
             Commands.AddCommand("who", this, who);
             Commands.ParamsAction say = Say;
-            Commands.AddCommand("say", this, say);
+            Commands.AddCommand(new string[] { "'", "say" }, this, say);
             Commands.ParamsAction quit = Quit;
             Commands.AddCommand("quit", this, quit, fullMatch: true);
 

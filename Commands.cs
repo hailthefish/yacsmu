@@ -81,39 +81,46 @@ namespace yacsmu
                 if (client.inputQueue.Count > 0)
                 {
                     string clientInput = client.inputQueue.Dequeue();
-                   
-                    string command = clientInput.Split(" ").First().ToLower();
-                    string commandText = clientInput.TrimStart(command.ToCharArray()).Trim();
-                    Log.Verbose("Input: {0} sent {1}. Parsed to: \'{2}\' + \'{3}\'", client.RemoteEnd.Address, clientInput, command, commandText);
-                    object[] arguments = new object[] {client, commandText };
-                    if (clientInput != string.Empty && commandDict.ContainsKey(command))
+
+                    string command;
+                    if (clientInput != string.Empty)
                     {
-                        Command c = commandDict[command];
-                        c.MethodDelegate.Invoke(c.CallObject, arguments);
-                    }
-                    else if (clientInput != string.Empty)
-                    {
-                        int index = commandList.BinarySearch(command);
-                        index = ~index; // We won't get here if there's an exact match, so we know we have the XOR of the closest match
-                        if (index >= 0 && index < commandList.Count && commandList[index].StartsWith(command))
+                        command = char.IsPunctuation(clientInput.First()) ? 
+                            clientInput.First().ToString() : clientInput.Split(" ").First().ToLower();
+                        string commandText = clientInput.TrimStart(command.ToCharArray()).Trim();
+                        Log.Verbose("Input: {0} sent {1}. Parsed to: \'{2}\' + \'{3}\'",
+                            client.RemoteEnd.Address, clientInput, command, commandText);
+                        object[] arguments = new object[] { client, commandText };
+                        if (commandDict.ContainsKey(command))
                         {
-                            string match = commandList[index];
-                            Command c = commandDict[match];
-                            if (!c.FullMatch)
-                            {
-                                c.MethodDelegate.Invoke(c.CallObject, arguments);
-                            }
-                            else
-                            {
-                                client.Send(string.Format("&RPlease type out '{0}' completely.&X",match));
-                            }
-                            
+                            Command c = commandDict[command];
+                            c.MethodDelegate.Invoke(c.CallObject, arguments);
                         }
                         else
                         {
-                            client.Send(string.Format("&RSorry, '{0}' doesn't match any known commands.&X", Color.Escape(command)));
+                            int index = commandList.BinarySearch(command);
+                            index = ~index; // We won't get here if there's an exact match, so we know we have the XOR of the closest match
+                            if (index >= 0 && index < commandList.Count && commandList[index].StartsWith(command))
+                            {
+                                string match = commandList[index];
+                                Command c = commandDict[match];
+                                if (!c.FullMatch)
+                                {
+                                    c.MethodDelegate.Invoke(c.CallObject, arguments);
+                                }
+                                else
+                                {
+                                    client.Send(string.Format("&RPlease type out '{0}' completely.&X", match));
+                                }
+
+                            }
+                            else
+                            {
+                                client.Send(string.Format("&RSorry, '{0}' doesn't match any known commands.&X", Color.Escape(command)));
+                            }
                         }
                     }
+                    
 
                     // Done Parsing
                     clientInput = null;
