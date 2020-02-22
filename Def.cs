@@ -14,6 +14,7 @@
 
         //ASCII
         internal const byte BEL = 0x07;
+        internal const char BELL = '\x007';
 
         //Telnet Negotiation
         internal const byte IAC = 0xFF;

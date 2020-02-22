@@ -117,6 +117,11 @@ namespace yacsmu
             }
         }
 
+        internal void SendBell()
+        {
+            Send(Def.BELL.ToString());
+        }
+
         internal void Flush()
         {
             if ((networkStream != null) && (networkStream.CanWrite) && outputBuilder.Length > 0)

@@ -22,8 +22,42 @@ namespace yacsmu
             Commands.AddCommand(new string[] { "'", "say" }, this, say);
             Commands.ParamsAction quit = Quit;
             Commands.AddCommand("quit", this, quit, fullMatch: true);
+            Commands.ParamsAction beep = Beep;
+            Commands.AddCommand("beep", this, beep);
 
             Log.Information("SimpleChat running.");
+        }
+
+        private void Beep(object obj, object[] args)
+        {
+            Client sender = (Client)args[0];
+            if (args.Length<2) sender.Send("&RBeep <target ID> <message>.");
+            else
+            {
+                try
+                {
+                    if (!uint.TryParse(args[1].ToString().Split(" ").First().ToLower(), out uint targetId))
+                    {
+                        sender.Send("&RInvalid target argument. Beep <target ID> <message>.&X");
+                    }
+                    Client target = clients.GetClientByID(targetId);
+                    if (sender != target)
+                    {
+                        string message = args[1].ToString().TrimStart(args[1].ToString().Split(" ").First().ToCharArray()).TrimStart();
+                        target.SendBell();
+                        target.Send(string.Format("&Y{0} beeped you&w: {1}{2}&X", sender.Id, clientColors[sender], message));
+                        sender.Send(string.Format("&YYou beeped {0}&w: {1}{2}&X", target.Id, clientColors[sender], message));
+                    }
+                    else
+                    {
+                        sender.Send("&YWhy would you want to beep yourself?&X");
+                    }
+                }
+                catch (Exception)
+                {
+                    sender.Send("&RInvalid argument. Beep <target ID> <message>.&X");
+                }
+            }
         }
 
         private void Quit(object obj, object[] args)
@@ -31,7 +65,7 @@ namespace yacsmu
             Client client = (Client)args[0];
             client.Status = ClientStatus.Disconnecting;
             client.Send("^c&WGoodbye!&X");
-            clients.SendToAllExcept(string.Format("&c{0}&z has quit.&X",client.RemoteEnd.Address),client);
+            clients.SendToAllExcept(string.Format("&c{0}&K has quit.&X",client.RemoteEnd.Address),client);
         }
 
 
