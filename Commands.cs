@@ -88,8 +88,6 @@ namespace yacsmu
                         command = char.IsPunctuation(clientInput.First()) ? 
                             clientInput.First().ToString() : clientInput.Split(" ").First().ToLower();
                         string commandText = clientInput.TrimStart(command.ToCharArray()).Trim();
-                        Log.Verbose("Input: {0} sent {1}. Parsed to: \'{2}\' + \'{3}\'",
-                            client.RemoteEnd.Address, clientInput, command, commandText);
                         object[] arguments = new object[] { client, commandText };
                         if (commandDict.ContainsKey(command))
                         {

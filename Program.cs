@@ -50,6 +50,7 @@ namespace yacsmu
                     {
                         running = false;
                         Log.Information("Shutdown started from console.");
+                        server.clients.SendToAll("&RShutdown initiated from Console.&X");
                     }
                 }
                 
@@ -80,17 +81,15 @@ namespace yacsmu
                 }
                 Thread.Sleep(10);
             }
-            
-
-            server.Stop();
-
 
             //Shutdown goes here
 
-
-
-
-
+            foreach (var client in server.clients.GetClientList())
+            {
+                client.Status = ClientStatus.Disconnecting;
+            }
+            server.clients.FlushAll();
+            server.Stop();
 
             Log.Information("Shutdown complete.");
             Log.CloseAndFlush();

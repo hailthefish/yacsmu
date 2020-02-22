@@ -87,6 +87,36 @@ namespace yacsmu
             else outputBuilder.Append(message);
         }
 
+        internal void SendFile(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                Log.Warning("File not found: {0}", filePath);
+                Send("&RFile not found!&X");
+            }
+            else
+            {
+                FileInfo file = new FileInfo(filePath);
+                if (file.Length > Def.MAX_BUFFER)
+                {
+                    Log.Warning("File too long: {0}", filePath);
+                    Send("&RFile too long!&X");
+                }
+                else
+                {
+                    try
+                    {
+                        Send(File.ReadAllText(filePath));
+                    }
+                    catch (Exception)
+                    {
+
+                        throw;
+                    }
+                }
+            }
+        }
+
         internal void Flush()
         {
             if ((networkStream != null) && (networkStream.CanWrite) && outputBuilder.Length > 0)

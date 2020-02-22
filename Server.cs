@@ -132,6 +132,7 @@ namespace yacsmu
 
                     Client newClient = new Client((uint)clients.Count + 1, remoteEnd);
                     clients.AddClient(newSocket, newClient);
+                    newClient.SendFile(Def.TITLESCREEN);
 
                     //DirectRawSend(newSocket, new byte[] {Def.IAC,Def.DO,Def.TTYPE }, SocketFlags.None);
                 }
