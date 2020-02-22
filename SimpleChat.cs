@@ -20,9 +20,18 @@ namespace yacsmu
             Commands.AddCommand("who", this, who);
             Commands.ParamsAction say = Say;
             Commands.AddCommand("say", this, say);
-
+            Commands.ParamsAction quit = Quit;
+            Commands.AddCommand("quit", this, quit, fullMatch: true);
 
             Log.Information("SimpleChat running.");
+        }
+
+        private void Quit(object obj, object[] args)
+        {
+            Client client = (Client)args[0];
+            client.Status = ClientStatus.Disconnecting;
+            client.Send("^c&WGoodbye!&X");
+            clients.SendToAllExcept(string.Format("&c{0}&z has quit.&X",client.RemoteEnd.Address),client);
         }
 
 

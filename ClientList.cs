@@ -173,6 +173,10 @@ namespace yacsmu
                     {
                         client.Flush();
                     }
+                    if (client.Status == ClientStatus.Disconnecting && client.outputBuilder.Length == 0)
+                    {
+                        KickClient(client);
+                    }
                 }
             }
         }

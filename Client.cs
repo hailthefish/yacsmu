@@ -54,6 +54,7 @@ namespace yacsmu
 
         internal StringBuilder outputBuilder;
         internal Queue<string> inputQueue;
+        private string lastAddedInput = null;
 
         private NetworkStream networkStream;
         private StringBuilder inputBuilder;
@@ -172,7 +173,19 @@ namespace yacsmu
                 string line;
                 while ((line = reader.ReadLine())!= null)
                 {
-                    inputQueue.Enqueue(line);
+                    switch (line)
+                    {
+                        case "!":
+                            if(lastAddedInput != null)inputQueue.Enqueue(lastAddedInput);
+                            break;
+                        case "!x":
+                            inputQueue.Clear();
+                            break;
+                        default:
+                            inputQueue.Enqueue(line);
+                            lastAddedInput = line;
+                            break;
+                    }
                 }
                 
             }
