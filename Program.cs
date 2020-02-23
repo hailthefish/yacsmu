@@ -11,6 +11,7 @@ namespace yacsmu
         private const long MAIN_TICKRATE = 250; // milliseconds, how often the main loop runs.
 
         internal static Server server;
+        internal static SimpleChat simpleChat;
         private static bool running = true;
 
         static void Main(string[] args)
@@ -30,7 +31,7 @@ namespace yacsmu
 
             // Load client-list dependent stuff after here
 
-            SimpleChat simpleChat = new SimpleChat();
+            simpleChat = new SimpleChat();
 
 
 

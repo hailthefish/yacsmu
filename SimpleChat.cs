@@ -16,34 +16,51 @@ namespace yacsmu
         {
             clientColors = new Dictionary<Client, string>();
             clients = Program.server.clients;
+
             Commands.ParamsAction who = Who;
-            Commands.AddCommand("who", this, who);
+            Commands.AddCommand("who", who);
             Commands.ParamsAction say = Say;
-            Commands.AddCommand(new string[] { "'", "say" }, this, say);
+            Commands.AddCommand(new string[] { "'", "say" }, say);
             Commands.ParamsAction quit = Quit;
-            Commands.AddCommand("quit", this, quit, fullMatch: true);
+            Commands.AddCommand("quit", quit, fullMatch: true);
             Commands.ParamsAction beep = Beep;
-            Commands.AddCommand("beep", this, beep);
+            Commands.AddCommand("beep", beep, 1);
+            Commands.ParamsAction recolor = Recolor;
+            Commands.AddCommand("recolor", recolor);
 
             Log.Information("SimpleChat running.");
         }
 
-        private void Beep(object obj, object[] args)
+        private void Recolor(ref Client client, string[] args)
         {
-            Client sender = (Client)args[0];
-            if (args.Length<2) sender.Send("&RBeep <target ID> <message>.");
+            clientColors[client] = Color.Tokens.mapANSI.FirstOrDefault(x => x.Value == Color.RandomFG()).Key;
+            client.Send(string.Format("&X{0}This is your new color.&X",clientColors[client]));
+        }
+
+        private void Beep(ref Client sender, string[] args)
+        {
+            if (args.Length < 2)
+            {
+                sender.Send("&RSyntax: Beep <target ID #> <message>.");
+            }
             else
             {
-                try
+                bool parsedTarget = uint.TryParse(args[0], out uint targetId);
+                if (!parsedTarget)
                 {
-                    if (!uint.TryParse(args[1].ToString().Split(" ").First().ToLower(), out uint targetId))
-                    {
-                        sender.Send("&RInvalid target argument. Beep <target ID> <message>.&X");
-                    }
+                    sender.Send("&RInvalid target argument. Target must be a number.&X");
+                }
+                else
+                {
                     Client target = clients.GetClientByID(targetId);
-                    if (sender != target)
+
+                    if (target == null)
                     {
-                        string message = args[1].ToString().TrimStart(args[1].ToString().Split(" ").First().ToCharArray()).TrimStart();
+                        sender.Send("&RInvalid target. Try using the WHO command.&X");
+                    }
+                    else if (sender != target)
+                    {
+                        string message = args[1];
                         target.SendBell();
                         target.Send(string.Format("&Y{0} beeped you&w: {1}{2}&X", sender.Id, clientColors[sender], message));
                         sender.Send(string.Format("&YYou beeped {0}&w: {1}{2}&X", target.Id, clientColors[sender], message));
@@ -53,55 +70,65 @@ namespace yacsmu
                         sender.Send("&YWhy would you want to beep yourself?&X");
                     }
                 }
-                catch (Exception)
-                {
-                    sender.Send("&RInvalid argument. Beep <target ID> <message>.&X");
-                }
+
+
+
             }
         }
 
-        private void Quit(object obj, object[] args)
+        private void Quit(ref Client client, string[] args)
         {
-            Client client = (Client)args[0];
             client.Status = ClientStatus.Disconnecting;
             client.Send("^c&WGoodbye!&X");
-            clients.SendToAllExcept(string.Format("&c{0}&K has quit.&X",client.RemoteEnd.Address),client);
+            clients.SendToAllExcept(string.Format("{0}{1}&K has quit.&X", clientColors[client], client.Id), client);
         }
 
 
-        private void Who(object obj, object[] args)
+        private void Who(ref Client client, string[] args)
         {
-            Client client = (Client)args[0];
             StringBuilder messageBuilder = new StringBuilder();
-            messageBuilder.Append("&k^w" +
-                "                                  Simple Chat                                  " +
+            messageBuilder.Append("^k&w" +
+                "--------------------------------- Simple Chat ---------------------------------" +
                 Color.Style.Reset + Def.NEWLINE);
             foreach (var item in clientColors)
             {
-                messageBuilder.Append(string.Format("                          {0}{1}:        {2}{3}{4}",
-                    item.Value, item.Key.Id, item.Key.RemoteEnd.Address, Color.Style.Reset, Def.NEWLINE));
+                if (item.Key == client)
+                {
+                    messageBuilder.Append(string.Format("                          ^k&U{0}{1}:        {2}&u&X{3}",
+                        item.Value, item.Key.Id, item.Key.RemoteEnd.Address, Def.NEWLINE));
+                }
+                else
+                {
+                    messageBuilder.Append(string.Format("                          ^k{0}{1}:        {2}&X{3}",
+                        item.Value, item.Key.Id, item.Key.RemoteEnd.Address, Def.NEWLINE));
+                }
+                
             }
-            messageBuilder.Append("&k^w" +
-                "                                                                               " +
+            messageBuilder.Append("^k&w" +
+                "-------------------------------------------------------------------------------" +
                 Color.Style.Reset + Def.NEWLINE);
             client.Send(messageBuilder.ToString());
         }
 
-        private void Say(object obj, params object[] args)
+        private void Say(ref Client client, params object[] args)
         {
             Log.Verbose("Say invoked with {0} params.", args.Length);
             for (int i = 0; i < args.Length; i++)
             {
                 Log.Verbose("Param {0}: Type: {1}, Content: \'{2}\'", i, args[i].GetType().ToString(),args[i].ToString());
             }
-            Client client = (Client)args[0];
-            string clientInput = (string)args[1];
-            string timestampPrefix = string.Format("{0} : {1} says: &X", DateTime.UtcNow, client.Id);
-            string selfPrefix = "^g&WSent!^k  You said: ";
+            string clientInput = (string)args[0];
+            string otherPrefix = string.Format("&w{0} says: &X", client.Id);
+            string selfPrefix = "&wYou said: ";
             string message = string.Format(clientColors[client] + clientInput + "&X");
 
-            clients.SendToAllExcept(timestampPrefix + message, client);
+            clients.SendToAllExcept(otherPrefix + message, client);
             client.Send(selfPrefix + message);
+        }
+
+        internal string GetColor(Client client)
+        {
+            return clientColors[client];
         }
 
         internal void Update()
