@@ -23,20 +23,17 @@ namespace yacsmu
 
             // DB stuff will go here eventually
 
-            Console.WriteLine("Ready. Press enter to start:");
-            Console.ReadLine();
             server = new Server();
-            server.Start();
-            Console.WriteLine("Running. Press 'q' to stop.");
 
             // Load client-list dependent stuff after here
-
             simpleChat = new SimpleChat();
-
-
 
             // Last part of startup
             Commands.Ready();
+            Console.WriteLine("Ready. Press enter to start:");
+            Console.ReadLine();
+            server.Start();
+            Console.WriteLine("Running. Press 'q' to stop.");
             int counter = 0;
             var timer = new Stopwatch();
             timer.Start();

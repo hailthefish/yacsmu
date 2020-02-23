@@ -2,8 +2,6 @@
 {
     internal struct Def
     {
-        internal static string TITLESCREEN = ".\\files\\yacsmu_titlescreen.txt";
-
         internal const int BUF_SIZE = 2048;
         internal const int MAX_BUFFER = 16384;
         

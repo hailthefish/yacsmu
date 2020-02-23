@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 using Serilog;
 
 namespace yacsmu
@@ -132,7 +133,8 @@ namespace yacsmu
 
                     Client newClient = new Client((uint)clients.Count + 1, remoteEnd);
                     clients.AddClient(newSocket, newClient);
-                    newClient.SendFile(Def.TITLESCREEN);
+                    newClient.SendFile((Config.configuration["Server:TitlescreenPath"]));
+                    if (Program.simpleChat != null) Program.simpleChat.NewClient(newClient);
 
                     //DirectRawSend(newSocket, new byte[] {Def.IAC,Def.DO,Def.TTYPE }, SocketFlags.None);
                 }

@@ -28,7 +28,7 @@ namespace yacsmu
             Commands.ParamsAction recolor = Recolor;
             Commands.AddCommand("recolor", recolor);
 
-            Log.Information("SimpleChat running.");
+            Log.Information("SimpleChat loaded.");
         }
 
         private void Recolor(ref Client client, string[] args)
@@ -94,7 +94,7 @@ namespace yacsmu
             {
                 if (item.Key == client)
                 {
-                    messageBuilder.Append(string.Format("                          ^k&U{0}{1}:        {2}&u&X{3}",
+                    messageBuilder.Append(string.Format("                          ^k{0}&U{1}:        {2}&u&X{3}",
                         item.Value, item.Key.Id, item.Key.RemoteEnd.Address, Def.NEWLINE));
                 }
                 else
@@ -128,7 +128,19 @@ namespace yacsmu
 
         internal string GetColor(Client client)
         {
-            return clientColors[client];
+            return (clientColors != null && clientColors.Count > 0 && clientColors.ContainsKey(client)) ?
+                clientColors[client] : "&w";
+        }
+
+        public void NewClient(Client client)
+        {
+            // Generate a random control code, and find its token, then add the token to our dictionary
+            clientColors.Add(client, Color.Tokens.mapANSI.FirstOrDefault(x => x.Value == Color.RandomFG()).Key);
+
+            // And send the greeting
+            client.Send(string.Format("Simple Chat running on {0}:{1}", Program.server.Host, Program.server.Port));
+            Commands.SendPrompt(client);
+            clients.SendToAllExcept(string.Format("&X{0}{1}&W has joined.&X",clientColors[client],client.Id), client);
         }
 
         internal void Update()
@@ -145,25 +157,7 @@ namespace yacsmu
                     }
                 }
             }
-
-
-            foreach (var client in clientList)
-            {   
-                // Assign a random color for a newly connected client & send them a greeting.
-                if (!clientColors.ContainsKey(client)) //If we don't have a client color entry for them they must be new
-                {
-                    // Generate a random control code, and find its token, then add the token to our dictionary
-                    clientColors.Add(client, Color.Tokens.mapANSI.FirstOrDefault(x => x.Value == Color.RandomFG()).Key);
-
-                    // And send the greeting
-                    client.Send(string.Format("Simple Chat running on {0}:{1}", Program.server.Host, Program.server.Port));
-                    Commands.SendPrompt(client);
-                }
-                
-                
-            }
-
-
+            
         }
 
     }
