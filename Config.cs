@@ -88,5 +88,12 @@ namespace yacsmu
 
             Log.Information("Logging started.");
         }
+
+        internal static int? ToNullableInt (string input)
+        {
+            if (int.TryParse(input, out int result)) return result;
+            else return null;
+
+        }
     }
 }

@@ -33,7 +33,8 @@ namespace yacsmu
 
         private void Recolor(ref Client client, string[] args)
         {
-            clientColors[client] = Color.Tokens.mapANSI.FirstOrDefault(x => x.Value == Color.RandomFG()).Key;
+            string color = Color.RandomFG();
+            clientColors[client] = Color.Tokens.mapANSI.FirstOrDefault(x => x.Value == color).Key;
             client.Send(string.Format("&X{0}This is your new color.&X",clientColors[client]));
         }
 
@@ -135,7 +136,8 @@ namespace yacsmu
         public void NewClient(Client client)
         {
             // Generate a random control code, and find its token, then add the token to our dictionary
-            clientColors.Add(client, Color.Tokens.mapANSI.FirstOrDefault(x => x.Value == Color.RandomFG()).Key);
+            string color = Color.RandomFG();
+            clientColors.Add(client, Color.Tokens.mapANSI.FirstOrDefault(x => x.Value == color).Key);
 
             // And send the greeting
             client.Send(string.Format("Simple Chat running on {0}:{1}", Program.server.Host, Program.server.Port));

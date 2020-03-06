@@ -201,7 +201,10 @@ namespace yacsmu
         internal static string RandomFG()
         {
             // -2, +1 so that we don't get black or 'default' because default is boring.
-            return Foreground[RandomGen.Roll((byte)(Foreground.Length-2))+1];
+            int selection = Program.random.Next(1, Foreground.Length - 2);
+            Log.Verbose("Selecting random color between 1 and {0}: {1}", Foreground.Length-2, selection);
+            return Foreground[selection];
+
         }
 
         // Hell no I'm not making a random background color function.

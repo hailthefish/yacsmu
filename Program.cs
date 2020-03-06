@@ -14,12 +14,16 @@ namespace yacsmu
         internal static SimpleChat simpleChat;
         private static bool running = true;
 
+        public static Random random;
+
         static void Main(string[] args)
         {
             Config.LoadConfig();
             Config.SetupLogging();
             
             bool logLevelIsVerbose = Log.IsEnabled(LogEventLevel.Verbose);
+
+            InitRandom();
 
             // DB stuff will go here eventually
 
@@ -94,6 +98,21 @@ namespace yacsmu
 
             Console.WriteLine("Done.");
             Console.ReadLine();
+        }
+
+        private static void InitRandom()
+        {
+            int? seed = Config.ToNullableInt(Config.configuration["Game:Seed"]);
+            if (seed != null)
+            {
+                Log.Debug("RNG initialized with seed {0}.", seed);
+                random = new Random((int)seed);
+            }
+            else
+            {
+                Log.Debug("RNG initialized with time-based seed.");
+                random = new Random();
+            }
         }
     }
 }
