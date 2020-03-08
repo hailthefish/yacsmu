@@ -14,6 +14,7 @@ namespace yacsmu
 
         internal SimpleChat()
         {
+            Program.server.OnNewClientConnected += _NewClient;
             clientColors = new Dictionary<Client, string>();
             clients = Program.server.clients;
 
@@ -133,8 +134,9 @@ namespace yacsmu
                 clientColors[client] : "&w";
         }
 
-        public void NewClient(Client client)
+        private void _NewClient(object Sender, NewClientEventArgs e)
         {
+            var client = e.Client;
             // Generate a random control code, and find its token, then add the token to our dictionary
             string color = Color.RandomFG();
             clientColors.Add(client, Color.Tokens.mapANSI.FirstOrDefault(x => x.Value == color).Key);

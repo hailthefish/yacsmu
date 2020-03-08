@@ -28,6 +28,8 @@ namespace yacsmu
 
         private Socket serverSocket;
 
+        public event EventHandler<NewClientEventArgs> OnNewClientConnected;
+
         
         internal Server()
         {
@@ -133,9 +135,11 @@ namespace yacsmu
 
                     Client newClient = new Client((uint)clients.Count + 1, remoteEnd);
                     clients.AddClient(newSocket, newClient);
-                    newClient.SendFile((Config.configuration["Server:TitlescreenPath"]));
-                    if (Program.simpleChat != null) Program.simpleChat.NewClient(newClient);
 
+                    newClient.SendFile((Config.configuration["Server:TitlescreenPath"]));
+                    OnNewClientConnected?.Invoke(this, new NewClientEventArgs(newClient));
+
+                    // TODO: Build a negotiation class to handle telnet negotiations per-client
                     //DirectRawSend(newSocket, new byte[] {Def.IAC,Def.DO,Def.TTYPE }, SocketFlags.None);
                 }
                 catch
@@ -166,5 +170,12 @@ namespace yacsmu
             
         }
 
+    }
+
+    internal class NewClientEventArgs : EventArgs
+    {
+        internal NewClientEventArgs(Client _client)
+        { Client = _client; }
+        internal Client Client { get; set; }
     }
 }
