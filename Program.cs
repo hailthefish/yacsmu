@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
 using Serilog;
 using Serilog.Events;
@@ -39,7 +38,7 @@ namespace yacsmu
             server.Start();
             Console.WriteLine("Running. Press 'q' to stop.");
             int counter = 0;
-            var timer = new Stopwatch();
+            var timer = new System.Diagnostics.Stopwatch();
             timer.Start();
 
             while (running)
