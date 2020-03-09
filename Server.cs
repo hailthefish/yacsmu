@@ -34,6 +34,7 @@ namespace yacsmu
         internal Server()
         {
             clients = new ClientList();
+
             IsAccepting = false;
             serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
@@ -133,14 +134,31 @@ namespace yacsmu
                     IPEndPoint remoteEnd = (IPEndPoint)newSocket.RemoteEndPoint;
                     Log.Verbose("New incoming connection from {remoteEndpoint} at {newClientConnectedAt} UTC.", remoteEnd, DateTime.UtcNow);
 
-                    Client newClient = new Client((uint)clients.Count + 1, remoteEnd);
-                    clients.AddClient(newSocket, newClient);
+                    uint newId;
+                    int attemptCount = 0;
+                    do
+                    {
+                        newId = (uint)Program.random.Next(int.MinValue, int.MaxValue);
+                        attemptCount++;
+                    }
+                    while (clients.GetClientByID(newId) != null && attemptCount <= Def.MAX_ATTEMPTS);
+                    if (attemptCount <= Def.MAX_ATTEMPTS)
+                    {
+                        Client newClient = new Client(newId, remoteEnd);
+                        clients.AddClient(newSocket, newClient);
 
-                    newClient.SendFile((Config.configuration["Server:TitlescreenPath"]));
-                    OnNewClientConnected?.Invoke(this, new NewClientEventArgs(newClient));
+                        newClient.SendFile((Config.configuration["Server:TitlescreenPath"]));
+                        OnNewClientConnected?.Invoke(this, new NewClientEventArgs(newId, newSocket, newClient));
 
-                    // TODO: Build a negotiation class to handle telnet negotiations per-client
-                    //DirectRawSend(newSocket, new byte[] {Def.IAC,Def.DO,Def.TTYPE }, SocketFlags.None);
+                        // TODO: Build a negotiation class to handle telnet negotiations per-client
+                        //DirectRawSend(newSocket, new byte[] {Def.IAC,Def.DO,Def.TTYPE }, SocketFlags.None);
+                    }
+                    else
+                    {
+                        DirectRawSend(newSocket, Encoding.ASCII.GetBytes("Too Many Connected Clients. Try again later."),SocketFlags.None);
+                        newSocket.Close();
+                    }
+
                 }
                 catch
                 {
@@ -174,8 +192,15 @@ namespace yacsmu
 
     internal class NewClientEventArgs : EventArgs
     {
-        internal NewClientEventArgs(Client _client)
-        { Client = _client; }
-        internal Client Client { get; set; }
+        internal uint Id { get; }
+        internal Client Client { get; }
+        internal Socket Socket { get; }
+
+        internal NewClientEventArgs(uint _id, Socket _socket, Client _client)
+        {
+            Id = _id;
+            Socket = _socket;
+            Client = _client;
+        }
     }
 }

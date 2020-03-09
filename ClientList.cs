@@ -21,7 +21,7 @@ namespace yacsmu
 
         internal ClientList()
         {
-           Collection = new Dictionary<Socket, Client>();
+            Collection = new Dictionary<Socket, Client>();
         }
 
         internal void AddClient(Socket socket, Client client)

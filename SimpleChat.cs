@@ -96,12 +96,12 @@ namespace yacsmu
             {
                 if (item.Key == client)
                 {
-                    messageBuilder.Append(string.Format("                          ^k{0}&U{1}:        {2}&u&X{3}",
+                    messageBuilder.Append(string.Format("                          ^k{0}&U{1:D10}        {2}&u&X{3}",
                         item.Value, item.Key.Id, item.Key.RemoteEnd.Address, Def.NEWLINE));
                 }
                 else
                 {
-                    messageBuilder.Append(string.Format("                          ^k{0}{1}:        {2}&X{3}",
+                    messageBuilder.Append(string.Format("                          ^k{0}{1:D10}        {2}&X{3}",
                         item.Value, item.Key.Id, item.Key.RemoteEnd.Address, Def.NEWLINE));
                 }
                 

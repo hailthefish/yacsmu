@@ -7,6 +7,8 @@
         
         internal const int STREAM_TIMEOUT = 250; // milliseconds
 
+        internal const int MAX_ATTEMPTS = 100;
+
         internal const string NEWLINE = "\r\n";
         internal static readonly char[] NEWLINE_CHAR = NEWLINE.ToCharArray();
 
