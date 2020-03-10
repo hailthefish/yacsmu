@@ -30,7 +30,48 @@ namespace yacsmu
             Commands.ParamsAction recolor = Recolor;
             Commands.AddCommand("recolor", recolor);
 
+            Commands.ParamsAction fart = Fart;
+            Commands.AddCommand("fart", fart);
+
             Log.Information("SimpleChat loaded.");
+        }
+
+        private void Fart(ref Client sender, string[] args)
+        {
+            if (string.IsNullOrWhiteSpace(args[0]))
+            {
+                sender.Send("&GYou fart!&X");
+                clients.SendToAllExcept(string.Format("&X{0}{1}&G farts!&X", clientColors[sender], sender.Id), sender);
+            }
+            else
+            {
+                bool parsedTarget = uint.TryParse(args[0], out uint targetId);
+                if (!parsedTarget)
+                {
+                    sender.Send("&RInvalid target argument. Target must be a number.&X");
+                }
+                else
+                {
+                    Client target = clients.GetClientByID(targetId);
+
+                    if (target == null)
+                    {
+                        sender.Send("&RInvalid target. Try using the WHO command.&X");
+                    }
+                    else if (sender != target)
+                    {
+                        target.Send(string.Format("&X{1}{0}&G farts on you!&X", sender.Id, clientColors[sender]));
+                        sender.Send(string.Format("&GYou fart on {0}!&X", target.Id));
+                        clients.SendToAllExcept(string.Format("&X{0}{1}&G farts on {2}{3}&G!&X", 
+                            clientColors[sender], sender.Id, clientColors[target], target.Id),
+                            new List<Client> { target, sender });
+                    }
+                    else
+                    {
+                        sender.Send("&YWhy would you want to fart on yourself?&X");
+                    }
+                }
+            }
         }
 
         private void Recolor(ref Client client, string[] args)
