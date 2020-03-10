@@ -161,6 +161,7 @@ namespace yacsmu
                     client.Value.ReadInput();
                 }
             }
+            Commands.ParseInputs();
         }
 
         internal void FlushAll()

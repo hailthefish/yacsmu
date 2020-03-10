@@ -15,6 +15,8 @@ namespace yacsmu
 
         public static Random random;
 
+        public static event EventHandler OnUpdate;
+
         static void Main(string[] args)
         {
             Config.LoadConfig();
@@ -38,8 +40,8 @@ namespace yacsmu
             server.Start();
             Console.WriteLine("Running. Press 'q' to stop.");
             int counter = 0;
-            var timer = new System.Diagnostics.Stopwatch();
-            timer.Start();
+            var stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
 
             while (running)
             {
@@ -56,28 +58,25 @@ namespace yacsmu
                 }
                 
 
-                if (timer.ElapsedMilliseconds >= MAIN_TICKRATE)
+                if (stopwatch.ElapsedMilliseconds >= MAIN_TICKRATE)
                 {
                     server.CheckConnectionsAlive(); // Check server connections and flag disconnected ones for client removal, then remove them
 
                     Log.Verbose("Tick. {clientsConnected} clients connected.", server.clients.Count);
-                    if (timer.ElapsedMilliseconds > (MAIN_TICKRATE * 2))
+                    if (stopwatch.ElapsedMilliseconds > (MAIN_TICKRATE * 2))
                     {
-                        Log.Warning("LAG: {elapsedMilliseconds} ms : {cycles} cycles!", timer.ElapsedMilliseconds, counter);
+                        Log.Warning("LAG: {elapsedMilliseconds} ms : {cycles} cycles!", stopwatch.ElapsedMilliseconds, counter);
                     }
 
                     server.clients.GetAllInput();
-                    Commands.ParseInputs();
 
                     // Game Update Stuff Happens Here
-
-
-                    simpleChat.Update();
+                    OnUpdate?.Invoke(null, null);
 
 
                     // End of this game update loop, send waiting data.
                     server.clients.FlushAll();
-                    timer.Restart();
+                    stopwatch.Restart();
                     counter = 0;
                 }
                 Thread.Sleep(10);

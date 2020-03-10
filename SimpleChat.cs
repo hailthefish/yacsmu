@@ -15,6 +15,7 @@ namespace yacsmu
         internal SimpleChat()
         {
             Program.server.OnNewClientConnected += _NewClient;
+            Program.OnUpdate += _Update;
             clientColors = new Dictionary<Client, string>();
             clients = Program.server.clients;
 
@@ -147,7 +148,7 @@ namespace yacsmu
             clients.SendToAllExcept(string.Format("&X{0}{1}&W has joined.&X",clientColors[client],client.Id), client);
         }
 
-        internal void Update()
+        internal void _Update(object sender, EventArgs e)
         {
             List<Client> clientList = clients.GetClientList();
             // Purge color entries for any disconnected clients
