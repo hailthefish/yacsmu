@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
+using Serilog;
+using Serilog.Events;
 
 namespace yacsmu
 {
@@ -9,29 +10,38 @@ namespace yacsmu
         private const long MAIN_TICKRATE = 250; // milliseconds, how often the main loop runs.
 
         internal static Server server;
+        internal static SimpleChat simpleChat;
         private static bool running = true;
+
+        public static Random random;
+
+        public static event EventHandler OnUpdate;
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Loading Configuration...");
             Config.LoadConfig();
+            Config.SetupLogging();
+            
+            bool logLevelIsVerbose = Log.IsEnabled(LogEventLevel.Verbose);
+
+            InitRandom();
 
             // DB stuff will go here eventually
 
-            Console.WriteLine("Ready. Press enter to start:");
-            Console.ReadLine();
             server = new Server();
-            server.Start();
-            Console.WriteLine("Running. Press 'q' to stop.");
 
             // Load client-list dependent stuff after here
-
-            SimpleChat simpleChat = new SimpleChat();
+            simpleChat = new SimpleChat();
 
             // Last part of startup
+            Commands.Ready();
+            Console.WriteLine("Ready. Press enter to start:");
+            Console.ReadLine();
+            server.Start();
+            Console.WriteLine("Running. Press 'q' to stop.");
             int counter = 0;
-            var timer = new Stopwatch();
-            timer.Start();
+            var stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
 
             while (running)
             {
@@ -42,55 +52,65 @@ namespace yacsmu
                     if (Console.ReadKey(true).KeyChar == 'q')
                     {
                         running = false;
+                        Log.Information("Shutdown started from console.");
+                        server.clients.SendToAll("&RShutdown initiated from Console.&X");
                     }
                 }
                 
 
-                if (timer.ElapsedMilliseconds >= MAIN_TICKRATE)
+                if (stopwatch.ElapsedMilliseconds >= MAIN_TICKRATE)
                 {
-                    server.CheckAlive();
+                    server.CheckConnectionsAlive(); // Check server connections and flag disconnected ones for client removal, then remove them
+
+                    Log.Verbose("Tick. {clientsConnected} clients connected.", server.clients.Count);
+                    if (stopwatch.ElapsedMilliseconds > (MAIN_TICKRATE * 2))
+                    {
+                        Log.Warning("LAG: {elapsedMilliseconds} ms : {cycles} cycles!", stopwatch.ElapsedMilliseconds, counter);
+                    }
+
                     server.clients.GetAllInput();
 
                     // Game Update Stuff Happens Here
-
-                    simpleChat.Update();
-
-
-                    /*
-                    Console.Write("Tick. ");
-                    if (server.clients.Count > 0)
-                    {
-                        Console.WriteLine(server.clients.Count + " connections.");
-                        //server.clients.SendToAll(Color.RandomFG() + string.Format("{0}: {1} clients connected.", DateTime.UtcNow, server.clients.Count) + Color.Reset);
-
-                    }
-                    else Console.WriteLine();
-                    */
+                    OnUpdate?.Invoke(null, null);
 
 
-
-                    if (timer.ElapsedMilliseconds > (MAIN_TICKRATE * 2))
-                    {
-                        Console.WriteLine("LAG: " + timer.ElapsedMilliseconds + "ms : " + counter + " cycles");
-                    }
-                    
+                    // End of this game update loop, send waiting data.
                     server.clients.FlushAll();
-
-                    timer.Restart();
+                    stopwatch.Restart();
                     counter = 0;
-
                 }
                 Thread.Sleep(10);
             }
-            Console.WriteLine("Stopping...");
 
-
-            
-            server.Stop();
             //Shutdown goes here
+
+            foreach (var client in server.clients.GetClientList())
+            {
+                client.Status = ClientStatus.Disconnecting;
+            }
+            server.clients.FlushAll();
+            server.Stop();
+
+            Log.Information("Shutdown complete.");
+            Log.CloseAndFlush();
 
             Console.WriteLine("Done.");
             Console.ReadLine();
+        }
+
+        private static void InitRandom()
+        {
+            int? seed = Config.ToNullableInt(Config.configuration["Game:Seed"]);
+            if (seed != null)
+            {
+                Log.Debug("RNG initialized with seed {0}.", seed);
+                random = new Random((int)seed);
+            }
+            else
+            {
+                Log.Debug("RNG initialized with time-based seed.");
+                random = new Random();
+            }
         }
     }
 }

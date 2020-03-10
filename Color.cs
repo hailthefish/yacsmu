@@ -3,15 +3,28 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Linq;
+using Serilog;
 
 namespace yacsmu
 {
     internal struct Color
     {
 
+        internal static string Strip(string input)
+        {                
+            //Find all the things that look like tokens and get rid of them.
+            string result = Tokens.randomToken.Replace(input, string.Empty);
+            return Tokens.parseRegex.Replace(result, m => string.Empty);
+        }
+
+        internal static string Escape(string input)
+        {
+            string result = Tokens.tokens.Replace(input, m => m.Value + m.Value);
+            return result;
+        }
+
         internal static string ParseTokens(string input, bool useANSI)
         {
-
             // useANSI = whether or not a client wants to recieve ANSI color/style codes
             // This will be useful later when we have telnet negotiation and client options
 
@@ -23,10 +36,9 @@ namespace yacsmu
             }
             else
             {
-                //Find all the things that look like tokens and get rid of them.
-                string result = Tokens.randomToken.Replace(input, string.Empty);
-                return Tokens.parseRegex.Replace(result, m => string.Empty);
+                return Strip(input);
             }
+
         }
 
 
@@ -81,17 +93,18 @@ namespace yacsmu
                 { Regex.Escape(FG_TOKEN + "W") , FG.White },
                 { Regex.Escape(FG_TOKEN + "D") , FG.Default },
                 // Misc/Escaping Tokens/etc
-                //{ Regex.Escape(ST_TOKEN + ST_TOKEN), ST_TOKEN}, commented out because ST and BG are currently the same
+                //{ Regex.Escape(ST_TOKEN + ST_TOKEN), ST_TOKEN}, commented out because ST and FG are currently the same
                 { Regex.Escape(BG_TOKEN + BG_TOKEN), BG_TOKEN},
                 { Regex.Escape(FG_TOKEN + FG_TOKEN), FG_TOKEN},
                 { Regex.Escape(FG_TOKEN), string.Empty},
-                // { Regex.Escape(ST_TOKEN), string.Empty}, comented out because ST and BG are currently the same
+                // { Regex.Escape(ST_TOKEN), string.Empty}, comented out because ST and FG are currently the same
                 { Regex.Escape(BG_TOKEN), string.Empty},
                 {Regex.Escape(RANDOM_TOKEN), RANDOM_TOKEN }, // We replace this separately
             };
 
             internal static readonly Regex parseRegex = new Regex(string.Join("|", mapANSI.Keys));
             internal static readonly Regex randomToken = new Regex(Regex.Escape(RANDOM_TOKEN));
+            internal static readonly Regex tokens = new Regex(string.Join("|", new string[] { FG_TOKEN, BG_TOKEN, ST_TOKEN }));
         }
 
 
@@ -188,7 +201,10 @@ namespace yacsmu
         internal static string RandomFG()
         {
             // -2, +1 so that we don't get black or 'default' because default is boring.
-            return Foreground[RandomGen.Roll((byte)(Foreground.Length-2))+1];
+            int selection = Program.random.Next(1, Foreground.Length - 2);
+            Log.Verbose("Selecting random color between 1 and {0}: {1}", Foreground.Length-2, selection);
+            return Foreground[selection];
+
         }
 
         // Hell no I'm not making a random background color function.

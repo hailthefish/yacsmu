@@ -6,6 +6,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
+using Serilog;
 
 namespace yacsmu
 {
@@ -26,19 +28,23 @@ namespace yacsmu
 
         private Socket serverSocket;
 
+        public event EventHandler<NewClientEventArgs> OnNewClientConnected;
+
         
         internal Server()
         {
             clients = new ClientList();
+
             IsAccepting = false;
             serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             try
             {
-                Port = int.Parse(Config.configuration["Server:port"]);
+                Port = int.Parse(Config.configuration["Server:Port"]);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Log.Error("Exception thrown during server start: {exception}", e);
                 throw;
             }
         }
@@ -46,7 +52,7 @@ namespace yacsmu
         internal void Start()
         {
             StartTime = DateTime.UtcNow;
-            Console.WriteLine("Starting server on port {0} at {1}", Port, StartTime);
+            Log.Information("Starting server on port {Port} at {StartTime} UTC.", Port, StartTime);
             serverSocket.Bind(new IPEndPoint(CONN_IP, Port));
             serverSocket.Listen(0);
             Host = Dns.GetHostName();
@@ -58,7 +64,7 @@ namespace yacsmu
         {
             IsAccepting = false;
             ShutdownTime = DateTime.UtcNow;
-            Console.WriteLine("Stopping server at {0}. Uptime: {1}.", ShutdownTime, Uptime);
+            Log.Information("Stopping server at {ShutdownTime} UTC. Uptime: {Uptime}.", ShutdownTime, Uptime);
             Console.WriteLine();
             try
             {
@@ -71,9 +77,9 @@ namespace yacsmu
                 }
                 serverSocket.Close();
             }
-            catch
+            catch (Exception e)
             {
-
+                Log.Error("Exception thrown during server stop: {exception}", e);
                 throw;
             }
 
@@ -89,7 +95,7 @@ namespace yacsmu
             
         }
 
-        internal void CheckAlive()
+        internal void CheckConnectionsAlive()
         {
             if (clients.Count>0)
             {
@@ -99,12 +105,9 @@ namespace yacsmu
                     {
                         client.Value.Status = ClientStatus.Invalid;
                     }
-
                 }
                 clients.RemoveInvalidClients();
             }
-
-            
         }
         
         private bool IsConnected(Socket socket)
@@ -113,7 +116,11 @@ namespace yacsmu
             {
                 return !(socket.Poll(1, SelectMode.SelectRead) && socket.Available == 0);
             }
-            catch (SocketException) { return false; }
+            catch (SocketException)
+            {
+                Log.Debug("Connection polling failed for {remoteEndpoint}.");
+                return false;
+            }
         }
 
         private void HandleIncoming(IAsyncResult ar)
@@ -125,14 +132,33 @@ namespace yacsmu
                     Socket oldSocket = (Socket)ar.AsyncState;
                     Socket newSocket = oldSocket.EndAccept(ar);
                     IPEndPoint remoteEnd = (IPEndPoint)newSocket.RemoteEndPoint;
+                    Log.Verbose("New incoming connection from {remoteEndpoint} at {newClientConnectedAt} UTC.", remoteEnd, DateTime.UtcNow);
 
-                    Client newClient = new Client((uint)clients.Count + 1, remoteEnd);
-                    clients.AddClient(newSocket, newClient);
-                    Console.WriteLine(string.Format("CONNECTION: From {0} at {1}", remoteEnd, newClient.ConnectedAt));
+                    uint newId;
+                    int attemptCount = 0;
+                    do
+                    {
+                        newId = (uint)Program.random.Next(int.MinValue, int.MaxValue);
+                        attemptCount++;
+                    }
+                    while (clients.GetClientByID(newId) != null && attemptCount <= Def.MAX_ATTEMPTS);
+                    if (attemptCount <= Def.MAX_ATTEMPTS)
+                    {
+                        Client newClient = new Client(newId, remoteEnd);
+                        clients.AddClient(newSocket, newClient);
 
-                    //DirectRawSend(newSocket, new byte[] {Def.IAC,Def.DO,Def.TTYPE }, SocketFlags.None);
+                        newClient.SendFile((Config.configuration["Server:TitlescreenPath"]));
+                        OnNewClientConnected?.Invoke(this, new NewClientEventArgs(newId, newSocket, newClient));
 
-                    //newClient.Send(Color.FG.Gray + Color.BG.DBlue + "¢£¤¦§¨©ª«¬­®¯°±²³´µ·¶¸¹º»¼½¾¿×æ÷ø" + Color.Reset);
+                        // TODO: Build a negotiation class to handle telnet negotiations per-client
+                        //DirectRawSend(newSocket, new byte[] {Def.IAC,Def.DO,Def.TTYPE }, SocketFlags.None);
+                    }
+                    else
+                    {
+                        DirectRawSend(newSocket, Encoding.ASCII.GetBytes("Too Many Connected Clients. Try again later."),SocketFlags.None);
+                        newSocket.Close();
+                    }
+
                 }
                 catch
                 {
@@ -162,5 +188,19 @@ namespace yacsmu
             
         }
 
+    }
+
+    internal class NewClientEventArgs : EventArgs
+    {
+        internal uint Id { get; }
+        internal Client Client { get; }
+        internal Socket Socket { get; }
+
+        internal NewClientEventArgs(uint _id, Socket _socket, Client _client)
+        {
+            Id = _id;
+            Socket = _socket;
+            Client = _client;
+        }
     }
 }

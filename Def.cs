@@ -7,11 +7,14 @@
         
         internal const int STREAM_TIMEOUT = 250; // milliseconds
 
+        internal const int MAX_ATTEMPTS = 100;
+
         internal const string NEWLINE = "\r\n";
         internal static readonly char[] NEWLINE_CHAR = NEWLINE.ToCharArray();
 
         //ASCII
         internal const byte BEL = 0x07;
+        internal const char BELL = '\x007';
 
         //Telnet Negotiation
         internal const byte IAC = 0xFF;
@@ -22,7 +25,7 @@
         internal const byte NOP = 0xF1;
         //Subnegotiation
         internal const byte SB = 0xFA; //Subnegotiation option start
-        internal const byte SE = 0xF0; //Subnegotiatoin option end
+        internal const byte SE = 0xF0; //Subnegotiation option end
         internal const byte IS = 0x00;
         internal const byte SEND = 0x01;
         //Options

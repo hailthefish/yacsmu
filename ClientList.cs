@@ -4,6 +4,7 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Linq;
+using Serilog;
 
 namespace yacsmu
 {
@@ -12,7 +13,6 @@ namespace yacsmu
 
         internal Dictionary<Socket,Client> Collection { get; private set; }
         internal int Count { get => Collection.Count; }
-        internal List<Client> safeIterableClientList;
 
         internal List<Client> GetClientList()
         {
@@ -21,13 +21,14 @@ namespace yacsmu
 
         internal ClientList()
         {
-           Collection = new Dictionary<Socket, Client>();
+            Collection = new Dictionary<Socket, Client>();
         }
 
         internal void AddClient(Socket socket, Client client)
         {
             Collection.Add(socket, client);
             client.AssignStream(socket);
+            Log.Information("CONNECTION: From {remoteEndpoint} at {newClientConnectTime} UTC.", client.RemoteEnd, client.ConnectedAt);
         }
 
         internal Client GetClientBySocket(Socket socket)
@@ -70,8 +71,8 @@ namespace yacsmu
         private void Kick(Socket socket, Client client)
         {
             socket.Shutdown(SocketShutdown.Both);
-            Console.WriteLine(string.Format("DISCONNECTED: {0} at {1}. Connected for {2}.",
-                (IPEndPoint)socket.RemoteEndPoint, DateTime.UtcNow, client.SessionDuration));
+            Log.Information("DISCONNECTED: {remoteEndpoint} at {clientDisconnectTime} UTC. Connected for: {clientSessionDuration}.",
+                (IPEndPoint)socket.RemoteEndPoint, DateTime.UtcNow, client.SessionDuration);
             client.CloseStream(false);
             socket.Close();
             Collection.Remove(socket);
@@ -107,19 +108,19 @@ namespace yacsmu
         {
             if (Collection.Count > 0)
             {
-                foreach (var client in Collection)
+                foreach (var client in GetClientList())
                 {
-                    if (client.Value.Status >= 0)
-                    {
-                        client.Value.Send(message);
-                    }
+                    client.Send(message);
                 }
             }
         }
 
         internal void SendTo(List<Client> recipients, string message)
         {
-            throw new NotImplementedException();
+            foreach (var recipient in recipients)
+            {
+                recipient.Send(message);
+            }
         }
 
         internal void SendToAllExcept(string message, Client excepted_client)
@@ -127,11 +128,11 @@ namespace yacsmu
 
             if (Collection.Count > 0)
             {
-                foreach (var client in Collection)
+                foreach (var client in GetClientList())
                 {
-                    if (client.Value.Status >= 0 && client.Value != excepted_client)
+                    if (client != excepted_client)
                     {
-                        client.Value.Send(message);
+                        client.Send(message);
                     }
                 }
             }
@@ -141,11 +142,11 @@ namespace yacsmu
         {
             if (Collection.Count > 0)
             {
-                foreach (var client in Collection)
+                foreach (var client in GetClientList())
                 {
-                    if (client.Value.Status >= 0 && !clientList.Contains(client.Value))
+                    if (!clientList.Contains(client))
                     {
-                        client.Value.Send(message);
+                        client.Send(message);
                     }
                 }
             }
@@ -155,25 +156,27 @@ namespace yacsmu
         {
             if (Collection.Count >= 0)
             {
-                foreach (var client in Collection)
+                foreach (var client in GetActiveClients())
                 {
-                    if (client.Value.Status > 0)
-                    {
-                        client.Value.ReadInput();
-                    }
+                    client.Value.ReadInput();
                 }
             }
+            Commands.ParseInputs();
         }
 
         internal void FlushAll()
         {
             if (Collection.Count >= 0)
             {
-                foreach (var client in Collection)
+                foreach (var client in GetClientList())
                 {
-                    if (client.Value.Status > 0 && client.Value.outputBuilder.Length > 0)
+                    if (client.outputBuilder.Length > 0)
                     {
-                        client.Value.SendOutput();
+                        client.Flush();
+                    }
+                    if (client.Status == ClientStatus.Disconnecting && client.outputBuilder.Length == 0)
+                    {
+                        KickClient(client);
                     }
                 }
             }

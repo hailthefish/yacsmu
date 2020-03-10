@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
 using System.Text.RegularExpressions;
+using Serilog;
 
 namespace yacsmu
 {
@@ -49,9 +50,11 @@ namespace yacsmu
         internal string SessionDuration { get => DateTime.UtcNow.Subtract(ConnectedAt).ToString(@"d\d\ hh\:mm\:ss"); }
         internal TimeSpan SessionSpan { get => DateTime.UtcNow.Subtract(ConnectedAt); }
         internal ClientStatus Status { get; set; }
+        internal bool EnabledANSI { get; private set; }
 
         internal StringBuilder outputBuilder;
         internal Queue<string> inputQueue;
+        private string lastAddedInput = null;
 
         private NetworkStream networkStream;
         private StringBuilder inputBuilder;
@@ -65,14 +68,18 @@ namespace yacsmu
             inputBuilder = new StringBuilder();
             inputQueue = new Queue<string>();
             Status = ClientStatus.Unauthenticated;
+            EnabledANSI = true;
         }
 
         internal void Send(string message)
         {
+
+            message = Color.ParseTokens(message, EnabledANSI);
             outputBuilder.Append(message+Def.NEWLINE);
         }
         internal void Send(string message, bool newline)
         {
+            message = Color.ParseTokens(message, EnabledANSI);
             if (newline)
             {
                 outputBuilder.Append(message + Def.NEWLINE);
@@ -80,7 +87,42 @@ namespace yacsmu
             else outputBuilder.Append(message);
         }
 
-        internal void SendOutput()
+        internal void SendFile(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                Log.Warning("File not found: {0}", filePath);
+                Send("&RFile not found!&X");
+            }
+            else
+            {
+                FileInfo file = new FileInfo(filePath);
+                if (file.Length > Def.MAX_BUFFER)
+                {
+                    Log.Warning("File too long: {0}", filePath);
+                    Send("&RFile too long!&X");
+                }
+                else
+                {
+                    try
+                    {
+                        Send(File.ReadAllText(filePath));
+                    }
+                    catch (Exception)
+                    {
+
+                        throw;
+                    }
+                }
+            }
+        }
+
+        internal void SendBell()
+        {
+            Send(Def.BELL.ToString());
+        }
+
+        internal void Flush()
         {
             if ((networkStream != null) && (networkStream.CanWrite) && outputBuilder.Length > 0)
             {
@@ -125,7 +167,7 @@ namespace yacsmu
 
                 throw;
             }
-            //Console.WriteLine("Sent {0} bytes to {1}",((TxStateObj)ar.AsyncState).dataLength,RemoteEnd);
+            Log.Debug("Sent {sentBytes} bytes to {remoteEndpoint}.", ((TxStateObj)ar.AsyncState).dataLength, RemoteEnd);
         }
 
         internal void ReadInput()
@@ -146,7 +188,7 @@ namespace yacsmu
 
                 int bytesReceived = networkStream.EndRead(ar);
                 string inputReceived = Encoding.ASCII.GetString(buffer, 0, bytesReceived);
-                //Console.WriteLine("Read {0} bytes from {1}.", bytesReceived, RemoteEnd);
+                Log.Debug("Read {readBytes} bytes from {remoteEndpoint}.",bytesReceived, RemoteEnd);
                 inputBuilder.Append(inputReceived);
                 ChunkifyInput();
 
@@ -166,7 +208,19 @@ namespace yacsmu
                 string line;
                 while ((line = reader.ReadLine())!= null)
                 {
-                    inputQueue.Enqueue(line);
+                    switch (line)
+                    {
+                        case "!":
+                            if(lastAddedInput != null)inputQueue.Enqueue(lastAddedInput);
+                            break;
+                        case "!x":
+                            inputQueue.Clear();
+                            break;
+                        default:
+                            inputQueue.Enqueue(line);
+                            lastAddedInput = line;
+                            break;
+                    }
                 }
                 
             }
