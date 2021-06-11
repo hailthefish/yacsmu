@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Serilog;
-using System.Text;
 using System.Text.RegularExpressions;
+using System;
 
 namespace yacsmu
 {
@@ -17,7 +16,6 @@ namespace yacsmu
         internal Command(Commands.ParamsAction del, int reservedArguments = 0, bool fullMatch = false)
         {
             MethodDelegate = del;
-
             ReservedArguments = reservedArguments;
             FullMatch = fullMatch;
         }
@@ -27,7 +25,7 @@ namespace yacsmu
     {
         public delegate void ParamsAction(ref Client client, string[] arguments);
 
-        private static Dictionary<string, Command> commandDict = new Dictionary<string, Command>();
+        private static Dictionary<string, Command> commandDict = new Dictionary<string, Command>(StringComparer.OrdinalIgnoreCase);
         private static List<string> commandList = null;
 
         public static bool AddCommand
@@ -87,26 +85,42 @@ namespace yacsmu
 
         private static string[] ParseArguments(ref Client client, Command command, string clientInput = null)
         {
+            
             string[] arguments;
-            if (command.ReservedArguments > 0 && !string.IsNullOrWhiteSpace(clientInput) && Regex.IsMatch(clientInput, @"(\S+)"))
+            if (command.ReservedArguments > 0 && !string.IsNullOrWhiteSpace(clientInput) /*&& Regex.IsMatch(clientInput, @"(\S+)")*/)
             {
                 arguments = new string[command.ReservedArguments + 1];
-                int firstSpace;
-                for (int i = 0; i < command.ReservedArguments; i++)
+                int firstSpace = clientInput.IndexOf(' ');
+                if (firstSpace > 0)
                 {
-                    firstSpace = clientInput.IndexOf(' ');
-                    if (firstSpace > 0)
+                    for (int i = 0; i < command.ReservedArguments; i++)
                     {
-                        arguments[i] = clientInput.Substring(0, clientInput.IndexOf(' ')).Trim();
-                        clientInput = clientInput.Substring(firstSpace).TrimStart();
+                        Log.Debug("Client Input: \"{clientInput}\", first space at: {firstSpace}.", clientInput, firstSpace);
+                        if (firstSpace > 0)
+                        {
+                            arguments[i] = clientInput.Substring(0, clientInput.IndexOf(' ')).Trim();
+                            clientInput = clientInput[firstSpace..].TrimStart();
+                        }
+                        else
+                        {
+                            arguments[i] = clientInput;
+                        }
+                        firstSpace = clientInput.IndexOf(' ');
                     }
+                    arguments[command.ReservedArguments] = clientInput;
                 }
-                arguments[command.ReservedArguments] = clientInput;
+                else
+                {
+                    arguments[0] = clientInput;
+                }
+                Log.Debug("Parsing command arguments from {client}: \"{clientInput}\" as: {arguments}.", client.Id, clientInput, arguments);
             }
             else
             {
                 arguments = new string[] { clientInput };
+                
             }
+            
             return arguments;
         }
 
@@ -119,10 +133,12 @@ namespace yacsmu
                 if (client.inputQueue.Count > 0)
                 {
                     string clientInput = client.inputQueue.Dequeue();
+                    
 
                     
                     if (!string.IsNullOrWhiteSpace(clientInput))
                     {
+                        
                         string command;
                         string remainder = null;
 
@@ -137,12 +153,13 @@ namespace yacsmu
                             int firstSpace = clientInput.IndexOf(' ');
                             if (firstSpace > 0)
                             {
-                                command = clientInput.Substring(0, clientInput.IndexOf(' ') - 1);
+                                command = clientInput.Substring(0, clientInput.IndexOf(' '));
                                 remainder = clientInput.Substring(firstSpace + 1);
                             }
                             else command = clientInput;
                         }
-                        
+                        Log.Debug("Parsing command {clientInput} from {client} as: [{command}] + [{remainder}].", clientInput, client.Id, command, remainder);
+
                         if (commandDict.ContainsKey(command))
                         {
                             Command c = commandDict[command];
@@ -172,11 +189,11 @@ namespace yacsmu
                                 client.Send(string.Format("&RSorry, '{0}' doesn't match any known commands.&X", Color.Escape(command)));
                             }
                         }
+
                     }
-                    
+
 
                     // Done Parsing
-                    clientInput = null;
                     SendPrompt(client);
                 }
             }

@@ -104,10 +104,18 @@ namespace yacsmu
                     }
                     else if (sender != target)
                     {
-                        string message = args[1];
-                        target.SendBell();
-                        target.Send(string.Format("&Y{0} beeped you&w: {1}{2}&X", sender.Id, clientColors[sender], message));
-                        sender.Send(string.Format("&YYou beeped {0}&w: {1}{2}&X", target.Id, clientColors[sender], message));
+                        if (args[1]!= null)
+                        {
+                            string message = args[1];
+                            target.SendBell();
+                            target.Send(string.Format("&Y{0} beeped you&w: {1}{2}&X", sender.Id, clientColors[sender], message));
+                            sender.Send(string.Format("&YYou beeped {0}&w: {1}{2}&X", target.Id, clientColors[sender], message));
+                        }
+                        else
+                        {
+                            sender.Send("&RYou can't just beep someone with no message. Rude.&X");
+                        }
+                       
                     }
                     else
                     {
@@ -156,18 +164,26 @@ namespace yacsmu
 
         private void Say(ref Client client, params object[] args)
         {
-            Log.Verbose("Say invoked with {0} params.", args.Length);
-            for (int i = 0; i < args.Length; i++)
+            if (args[0] != null)
             {
-                Log.Verbose("Param {0}: Type: {1}, Content: \'{2}\'", i, args[i].GetType().ToString(),args[i].ToString());
-            }
-            string clientInput = (string)args[0];
-            string otherPrefix = string.Format("&w{0} says: &X", client.Id);
-            string selfPrefix = "&wYou said: ";
-            string message = string.Format(clientColors[client] + clientInput + "&X");
+                Log.Verbose("Say invoked with {0} params.", args.Length);
+                for (int i = 0; i < args.Length; i++)
+                {
+                    Log.Verbose("Param {0}: Type: {1}, Content: \'{2}\'", i, args[i].GetType().ToString(), args[i].ToString());
+                }
+                string clientInput = (string)args[0];
+                string otherPrefix = string.Format("&w{0} says: &X", client.Id);
+                string selfPrefix = "&wYou said: ";
+                string message = string.Format(clientColors[client] + clientInput + "&X");
 
-            clients.SendToAllExcept(otherPrefix + message, client);
-            client.Send(selfPrefix + message);
+                clients.SendToAllExcept(otherPrefix + message, client);
+                client.Send(selfPrefix + message);
+            }
+            else
+            {
+                Log.Verbose("Say invoked with 0 arguments.");
+                client.Send("&RYou can't just say nothing.&X");
+            }
         }
 
         internal string GetColor(Client client)
