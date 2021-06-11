@@ -167,7 +167,7 @@ namespace yacsmu
 
                 throw;
             }
-            Log.Debug("Sent {sentBytes} bytes to {remoteEndpoint}.", ((TxStateObj)ar.AsyncState).dataLength, RemoteEnd);
+            Log.Verbose("Sent {sentBytes} bytes to {remoteEndpoint}.", ((TxStateObj)ar.AsyncState).dataLength, RemoteEnd);
         }
 
         internal void ReadInput()
@@ -188,7 +188,7 @@ namespace yacsmu
 
                 int bytesReceived = networkStream.EndRead(ar);
                 string inputReceived = Encoding.ASCII.GetString(buffer, 0, bytesReceived);
-                Log.Debug("Read {readBytes} bytes from {remoteEndpoint}.",bytesReceived, RemoteEnd);
+                Log.Verbose("Read {readBytes} bytes from {remoteEndpoint}.",bytesReceived, RemoteEnd);
                 inputBuilder.Append(inputReceived);
                 ChunkifyInput();
 
