@@ -171,10 +171,10 @@ namespace yacsmu
         {
             if (args[0] != null)
             {
-                Log.Verbose("Say invoked with {0} params.", args.Length);
+                //Log.Verbose("Say invoked with {0} params.", args.Length);
                 for (int i = 0; i < args.Length; i++)
                 {
-                    Log.Verbose("Param {0}: Type: {1}, Content: \'{2}\'", i, args[i].GetType().ToString(), args[i].ToString());
+                    //Log.Verbose("Param {0}: Type: {1}, Content: \'{2}\'", i, args[i].GetType().ToString(), args[i].ToString());
                 }
                 string clientInput = (string)args[0];
                 string otherPrefix = string.Format("&w{0} says: &X", client.Id);
@@ -186,7 +186,7 @@ namespace yacsmu
             }
             else
             {
-                Log.Verbose("Say invoked with 0 arguments.");
+                //Log.Verbose("Say invoked with 0 arguments.");
                 client.Send("&RYou can't just say nothing.&X");
             }
         }

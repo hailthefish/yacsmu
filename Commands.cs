@@ -32,15 +32,15 @@ namespace yacsmu
             (string commandString, ParamsAction commandMethod, int reservedArguments = 0, bool fullMatch = false)
         {
             bool ret;
-            if (ret = commandDict.TryAdd(commandString.ToLower(), new Command(commandMethod, reservedArguments, fullMatch)))
+            if (ret = commandDict.TryAdd(commandString, new Command(commandMethod, reservedArguments, fullMatch)))
             {
-                Log.Debug("Added command \"{0}\" for {1} from {2} with {3} arguments.",
-                    commandString.ToLower(), commandMethod.Method.Name, commandMethod.Target, reservedArguments);
+                Log.Information("Added command \"{0}\" for {1} from {2} with {3} arguments.",
+                    commandString, commandMethod.Method.Name, commandMethod.Target, reservedArguments);
             }
             else
             {
-                Log.Debug("Failed to add command \"{0}\" for {1} from {2} with {3} arguments.",
-                    commandString.ToLower(), commandMethod.Method.Name, commandMethod.Target, reservedArguments);
+                Log.Warning("Failed to add command \"{0}\" for {1} from {2} with {3} arguments.",
+                    commandString, commandMethod.Method.Name, commandMethod.Target, reservedArguments);
             }
             return ret;
         }
@@ -50,15 +50,15 @@ namespace yacsmu
         {
             for (int i = 0; i < commandStrings.Length; i++)
             {
-                if (commandDict.TryAdd(commandStrings[i].ToLower(), new Command(commandMethod, reservedArguments)))
+                if (commandDict.TryAdd(commandStrings[i], new Command(commandMethod, reservedArguments)))
                 {
-                    Log.Debug("Added command \"{0}\" for {1} from {2} with {3} arguments.",
-                        commandStrings[i].ToLower(), commandMethod.Method.Name, commandMethod.Target, reservedArguments);
+                    Log.Information("Added command \"{0}\" for {1} from {2} with {3} arguments.",
+                        commandStrings[i], commandMethod.Method.Name, commandMethod.Target, reservedArguments);
                 }
                 else
                 {
-                    Log.Debug("Failed to add command \"{0}\" for {1} from {2} with {3} arguments.",
-                        commandStrings[i].ToLower(), commandMethod.Method.Name, commandMethod.Target, reservedArguments);
+                    Log.Warning("Failed to add command \"{0}\" for {1} from {2} with {3} arguments.",
+                        commandStrings[i], commandMethod.Method.Name, commandMethod.Target, reservedArguments);
                 }
             }
 
@@ -95,7 +95,6 @@ namespace yacsmu
                 {
                     for (int i = 0; i < command.ReservedArguments; i++)
                     {
-                        Log.Debug("Client Input: \"{clientInput}\", first space at: {firstSpace}.", clientInput, firstSpace);
                         if (firstSpace > 0)
                         {
                             arguments[i] = clientInput.Substring(0, clientInput.IndexOf(' ')).Trim();
@@ -113,7 +112,7 @@ namespace yacsmu
                 {
                     arguments[0] = clientInput;
                 }
-                Log.Debug("Parsing command arguments from {client}: \"{clientInput}\" as: {arguments}.", client.Id, clientInput, arguments);
+                Log.Verbose("Parsing command arguments from {client}: \"{clientInput}\" as: {arguments}.", client.Id, clientInput, arguments);
             }
             else
             {
@@ -191,7 +190,6 @@ namespace yacsmu
                         }
 
                     }
-
 
                     // Done Parsing
                     SendPrompt(client);
