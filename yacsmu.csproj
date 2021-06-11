@@ -19,11 +19,11 @@
     <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
   </ItemGroup>
 
-  <ItemGroup>
+  <!--  <ItemGroup>
     <Reference Include="System">
       <HintPath>System</HintPath>
     </Reference>
-  </ItemGroup>
+  </ItemGroup> -->
 
   <ItemGroup>
     <None Update="config.ini">
