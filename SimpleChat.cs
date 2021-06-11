@@ -16,17 +16,22 @@ namespace yacsmu
         {
             Program.server.OnNewClientConnected += _NewClient;
             Program.OnUpdate += _Update;
+
             clientColors = new Dictionary<Client, string>();
             clients = Program.server.clients;
 
             Commands.ParamsAction who = Who;
             Commands.AddCommand("who", who);
+
             Commands.ParamsAction say = Say;
             Commands.AddCommand(new string[] { "'", "say" }, say);
+
             Commands.ParamsAction quit = Quit;
             Commands.AddCommand("quit", quit, fullMatch: true);
+
             Commands.ParamsAction beep = Beep;
             Commands.AddCommand("beep", beep, 1);
+
             Commands.ParamsAction recolor = Recolor;
             Commands.AddCommand("recolor", recolor);
 
