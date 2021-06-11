@@ -46,7 +46,7 @@ namespace yacsmu
         }
 
         public static void AddCommand
-            (string[] commandStrings, ParamsAction commandMethod, int reservedArguments = 0, bool fullMatch = false)
+            (string[] commandStrings, ParamsAction commandMethod, int reservedArguments = 0)
         {
             for (int i = 0; i < commandStrings.Length; i++)
             {
@@ -74,11 +74,11 @@ namespace yacsmu
         {
             if (Program.simpleChat != null)
             {
-                client.Send(string.Format("&X{0}>{2}{1}&X> ", Def.NEWLINE, client.Id, Program.simpleChat.GetColor(client)));
+                client.Send(string.Format("&X{0}> {2}{1}&X > ", Def.NEWLINE, client.Id, Program.simpleChat.GetColor(client)));
             }
             else
             {
-                client.Send(string.Format("&X{0}>{1}> ", Def.NEWLINE, client.Id));
+                client.Send(string.Format("&X{0}> {1} > ", Def.NEWLINE, client.Id));
             }
             
         }
@@ -157,12 +157,14 @@ namespace yacsmu
                             }
                             else command = clientInput;
                         }
-                        Log.Debug("Parsing command {clientInput} from {client} as: [{command}] + [{remainder}].", clientInput, client.Id, command, remainder);
+                        Log.Verbose("Parsing command {clientInput} from {client} as: [{command}] + [{remainder}].", clientInput, client.Id, command, remainder);
 
                         if (commandDict.ContainsKey(command))
                         {
                             Command c = commandDict[command];
                             c.MethodDelegate.Invoke(ref client, ParseArguments(ref client, c, remainder));
+                            Log.Verbose("Exact match: {client} sent [{command}], matched to {commandClass}:{commandDelegate}",
+                                client.Id, command, c.MethodDelegate.Target, c.MethodDelegate.Method.Name);
                         }
                         else
                         {
@@ -181,11 +183,13 @@ namespace yacsmu
                                 {
                                     client.Send(string.Format("&RPlease type out '{0}' completely.&X", match));
                                 }
-
+                                Log.Verbose("Partial match: {client} sent [{command}], matched to {commandClass}:{commandDelegate}. Full match required? {fullMatch}",
+                                    client.Id, command, c.MethodDelegate.Target,c.MethodDelegate.Method.Name, c.FullMatch);
                             }
                             else
                             {
                                 client.Send(string.Format("&RSorry, '{0}' doesn't match any known commands.&X", Color.Escape(command)));
+                                Log.Verbose("No match: {client} sent [{command}]", client.Id, command);
                             }
                         }
 
