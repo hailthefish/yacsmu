@@ -34,7 +34,7 @@ namespace yacsmu
             bool ret;
             if (ret = commandDict.TryAdd(commandString, new Command(commandMethod, reservedArguments, fullMatch)))
             {
-                Log.Information("Added command \"{0}\" for {1} from {2} with {3} arguments.",
+                Log.Debug("Added command \"{0}\" for {1} from {2} with {3} arguments.",
                     commandString, commandMethod.Method.Name, commandMethod.Target, reservedArguments);
             }
             else
@@ -52,7 +52,7 @@ namespace yacsmu
             {
                 if (commandDict.TryAdd(commandStrings[i], new Command(commandMethod, reservedArguments)))
                 {
-                    Log.Information("Added command \"{0}\" for {1} from {2} with {3} arguments.",
+                    Log.Debug("Added command \"{0}\" for {1} from {2} with {3} arguments.",
                         commandStrings[i], commandMethod.Method.Name, commandMethod.Target, reservedArguments);
                 }
                 else
